@@ -1,0 +1,36 @@
+name: PR build
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - feature/*
+  workflow_dispatch:
+jobs:
+  test-codepropertygraph:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        lfs: true
+    - name: Clone submodules
+      run: git submodule update --init --recursive
+    - name: apt-get update
+      run: sudo apt-get update
+    - name: Set up JDK
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+    - uses: actions/cache@v2
+      with:
+        path: |
+          ~/.sbt
+          ~/.coursier
+        key: ${{ runner.os }}-sbt-${{ hashfiles('**/build.sbt') }}
+    - name: Compile and run tests
+      run: sbt +test
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
