@@ -31,6 +31,6 @@ jobs:
           ~/.coursier
         key: ${{ runner.os }}-sbt-${{ hashfiles('**/build.sbt') }}
     - name: Compile and run tests
-      run: sbt stage +test
+      run: sbt clean stage +test
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
