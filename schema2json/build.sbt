@@ -28,3 +28,13 @@ ThisBuild / resolvers ++= Seq(
   Resolver.githubPackages("appthreat/overflowdb2"),
   "Sonatype OSS".at("https://oss.sonatype.org/content/repositories/public")
 )
+githubOwner := "appthreat"
+githubRepository := "cpg2"
+githubSuppressPublicationWarning := true
+credentials +=
+  Credentials(
+    "GitHub Package Registry",
+    "maven.pkg.github.com",
+    "appthreat",
+    sys.env.getOrElse("GITHUB_TOKEN", "N/A")
+  )
