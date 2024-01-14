@@ -1,4 +1,4 @@
-name := "codepropertygraph"
+name := "cpg2"
 
 dependsOn(Projects.protoBindings, Projects.domainClasses)
 
