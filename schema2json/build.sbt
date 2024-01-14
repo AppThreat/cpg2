@@ -22,3 +22,9 @@ Test / fork := true
 testOptions += Tests.Argument(TestFrameworks.JUnit, "-a", "-v")
 
 enablePlugins(JavaAppPackaging)
+
+ThisBuild / resolvers ++= Seq(
+  Resolver.mavenLocal,
+  Resolver.githubPackages("appthreat/overflowdb2"),
+  "Sonatype OSS".at("https://oss.sonatype.org/content/repositories/public")
+)

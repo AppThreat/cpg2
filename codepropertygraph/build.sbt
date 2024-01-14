@@ -9,3 +9,9 @@ libraryDependencies ++= Seq(
   "com.github.pathikrit"  %% "better-files"         % "3.9.2",
   "org.scalatest"         %% "scalatest"            % Versions.scalatest % Test
 )
+
+ThisBuild / resolvers ++= Seq(
+  Resolver.mavenLocal,
+  Resolver.githubPackages("appthreat/overflowdb2"),
+  "Sonatype OSS".at("https://oss.sonatype.org/content/repositories/public")
+)

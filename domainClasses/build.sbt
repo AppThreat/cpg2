@@ -1,4 +1,4 @@
-name := "codepropertygraph-domain-classes"
+name := "cpg2-domain-classes"
 
 libraryDependencies += "io.appthreat" %% "odb2-traversal" % Versions.overflowdb
 
@@ -17,3 +17,8 @@ Compile / scalacOptions --= Seq("-Wconf:cat=deprecation:w,any:e", "-Wunused", "-
 // this is just a temporarily commented out to fix the release build...
 // minified command that fails if the below line isn't commented: `sbt clean doc`
 // cleanFiles += baseDirectory.value / "src/main/generated"
+ThisBuild / resolvers ++= Seq(
+  Resolver.mavenLocal,
+  Resolver.githubPackages("appthreat/overflowdb2"),
+  "Sonatype OSS".at("https://oss.sonatype.org/content/repositories/public")
+)

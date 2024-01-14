@@ -1,4 +1,4 @@
-name := "codepropertygraph-schema"
+name := "cpg2-schema"
 
 libraryDependencies += "io.shiftleft" %% "overflowdb-codegen" % Versions.overflowdbCodegen
 
@@ -33,3 +33,9 @@ generateProtobuf := Def.taskDyn {
 lazy val schemaMd5File                 = file("target/schema-src.md5")
 def lastSchemaMd5: Option[String]      = scala.util.Try(IO.read(schemaMd5File)).toOption
 def lastSchemaMd5(value: String): Unit = IO.write(schemaMd5File, value)
+
+ThisBuild / resolvers ++= Seq(
+  Resolver.mavenLocal,
+  Resolver.githubPackages("appthreat/overflowdb2"),
+  "Sonatype OSS".at("https://oss.sonatype.org/content/repositories/public")
+)

@@ -1,4 +1,4 @@
-name := "codepropertygraph-protos"
+name := "cpg2-protos"
 
 lazy val generateProtobuf = taskKey[File]("generate protobuf definitions: cpg.proto")
 
@@ -77,3 +77,9 @@ Compile / sourceGenerators += Def.task {
 
   Seq(scalaFile)
 }.taskValue
+
+ThisBuild / resolvers ++= Seq(
+  Resolver.mavenLocal,
+  Resolver.githubPackages("appthreat/overflowdb2"),
+  "Sonatype OSS".at("https://oss.sonatype.org/content/repositories/public")
+)
