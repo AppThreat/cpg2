@@ -6,30 +6,8 @@ on:
       - 'v*'
   workflow_dispatch:    # allow to manually trigger this workflow
 jobs:
-  test-codepropertygraph:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: read
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        lfs: true
-        fetch-depth: 0
-    - name: Clone submodules
-      run: git submodule update --init --recursive
-    - name: Set up JDK
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'temurin'
-        java-version: '21'
-    - name: Compile and run tests
-      run: sbt clean stage +test
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   release:
     concurrency: release
-    needs: [test-codepropertygraph]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -46,7 +24,8 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
-      - run: sbt clean stage
+      - name: Compile and run tests
+        run: sbt clean stage +test
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: sbt publish
