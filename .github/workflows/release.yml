@@ -8,6 +8,9 @@ on:
 jobs:
   test-codepropertygraph:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
     steps:
     - uses: actions/checkout@v4
       with:
@@ -28,6 +31,9 @@ jobs:
     concurrency: release
     needs: [test-codepropertygraph]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
     steps:
       - uses: actions/checkout@v4
         with:

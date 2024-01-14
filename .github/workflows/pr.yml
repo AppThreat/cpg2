@@ -10,7 +10,9 @@ on:
 jobs:
   test-codepropertygraph:
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: read
+      packages: read
     steps:
     - uses: actions/checkout@v4
       with:
