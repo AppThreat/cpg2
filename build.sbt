@@ -1,20 +1,16 @@
 name := "cpg2"
 ThisBuild / organization := "io.appthreat"
-ThisBuild / version      := "0.0.2"
+ThisBuild / version      := "1.0.0"
 ThisBuild / scalaVersion := "3.3.1"
 
 // parsed by project/Versions.scala
-val overflowdbVersion = "0.0.3"
+val overflowdbVersion = "1.0.0"
 val overflowdbCodegenVersion = "2.103"
 
 ThisBuild / Test / fork           := true
 ThisBuild / Test / javaOptions += s"-Dlog4j2.configurationFile=file:${(ThisBuild / baseDirectory).value}/resources/log4j2-test.xml"
 // If we fork we immediately stumble upon https://github.com/sbt/sbt/issues/3892 and https://github.com/sbt/sbt/issues/3892
 ThisBuild / Test / javaOptions += s"-Duser.dir=${(ThisBuild / baseDirectory).value}"
-
-ThisBuild / libraryDependencies ++= Seq(
-  // `Optional` means "not transitive", but still included in "stage/lib"
-)
 
 publish / skip := true
 
