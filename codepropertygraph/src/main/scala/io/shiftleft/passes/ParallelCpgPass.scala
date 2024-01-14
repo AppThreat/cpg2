@@ -71,36 +71,35 @@ abstract class ConcurrentWriterCpgPass[T <: AnyRef](
         writerThread.start()
         implicit val ec: ExecutionContext = ExecutionContextProvider.getExecutionContext
         try
-            try
-                // The idea is that we have a ringbuffer completionQueue that contains the workunits that are currently in-flight.
-                // We add futures to the end of the ringbuffer, and take futures from the front.
-                // then we await the future from the front, and add it to the writer-queue.
-                // the end result is that we get deterministic output (esp. deterministic order of changes), while having up to one
-                // writer-thread and up to producerQueueCapacity many threads in-flight.
-                // as opposed to ParallelCpgPass, there is no race between diffgraph-generators to enqueue into the writer -- everything
-                // is nice and ordered. Downside is that a very slow part may gum up the works (i.e. the completionQueue fills up and threads go idle)
-                var done = false
-                while !done && writer.raisedException == null do
-                    if writer.raisedException != null then
-                        throw writer.raisedException // will be wrapped with good stacktrace in the finally block
+            // The idea is that we have a ringbuffer completionQueue that contains the workunits that are currently in-flight.
+            // We add futures to the end of the ringbuffer, and take futures from the front.
+            // then we await the future from the front, and add it to the writer-queue.
+            // the end result is that we get deterministic output (esp. deterministic order of changes), while having up to one
+            // writer-thread and up to producerQueueCapacity many threads in-flight.
+            // as opposed to ParallelCpgPass, there is no race between diffgraph-generators to enqueue into the writer -- everything
+            // is nice and ordered. Downside is that a very slow part may gum up the works (i.e. the completionQueue fills up and threads go idle)
+            var done = false
+            while !done && writer.raisedException == null do
+                if writer.raisedException != null then
+                    throw writer.raisedException // will be wrapped with good stacktrace in the finally block
 
-                    if completionQueue.size < producerQueueCapacity && partIter.hasNext then
-                        val next = partIter.next()
-                        // todo: Verify that we get FIFO scheduling; otherwise, do something about it.
-                        // if this e.g. used LIFO with 4 cores and 18 size of ringbuffer, then 3 cores may idle while we block on the front item.
-                        completionQueue.append(Future.apply {
-                            val builder = new DiffGraphBuilder
-                            runOnPart(builder, next.asInstanceOf[T])
-                            builder.build()
-                        })
-                    else if completionQueue.nonEmpty then
-                        val future = completionQueue.removeHead()
-                        val res    = Await.result(future, Duration.Inf)
-                        nDiff += res.size
-                        writer.queue.put(Some(res))
-                    else
-                        done = true
-                end while
+                if completionQueue.size < producerQueueCapacity && partIter.hasNext then
+                    val next = partIter.next()
+                    // todo: Verify that we get FIFO scheduling; otherwise, do something about it.
+                    // if this e.g. used LIFO with 4 cores and 18 size of ringbuffer, then 3 cores may idle while we block on the front item.
+                    completionQueue.append(Future.apply {
+                        val builder = new DiffGraphBuilder
+                        runOnPart(builder, next.asInstanceOf[T])
+                        builder.build()
+                    })
+                else if completionQueue.nonEmpty then
+                    val future = completionQueue.removeHead()
+                    val res    = Await.result(future, Duration.Inf)
+                    nDiff += res.size
+                    writer.queue.put(Some(res))
+                else
+                    done = true
+            end while
         finally
             try
                 // if the writer died on us, then the queue might be full and we could deadlock
