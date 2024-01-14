@@ -101,24 +101,19 @@ abstract class ConcurrentWriterCpgPass[T <: AnyRef](
                     else
                         done = true
                 end while
-            finally
-                try
-                    // if the writer died on us, then the queue might be full and we could deadlock
-                    if writer.raisedException == null then writer.queue.put(None)
-                    writerThread.join()
-                    // we need to reraise exceptions
-                    if writer.raisedException != null then
-                        throw new RuntimeException(
-                          "Failure in diffgraph application",
-                          writer.raisedException
-                        )
-
-                finally finish()
         finally
-            // the nested finally is somewhat ugly -- but we promised to clean up with finish(), we want to include finish()
-            // in the reported timings, and we must have our final log message if finish() throws
+            try
+                // if the writer died on us, then the queue might be full and we could deadlock
+                if writer.raisedException == null then writer.queue.put(None)
+                writerThread.join()
+                // we need to reraise exceptions
+                if writer.raisedException != null then
+                    throw new RuntimeException(
+                      "Failure in diffgraph application",
+                      writer.raisedException
+                    )
 
-            val nanosStop = System.nanoTime()
+            finally finish()
         end try
     end createApplySerializeAndStore
 

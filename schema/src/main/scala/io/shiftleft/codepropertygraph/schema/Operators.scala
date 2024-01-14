@@ -20,7 +20,7 @@ object Operators extends SchemaBase:
 // constants
         /** TODO next time we have a breaking change, consider unifying the `operator` prefix - some
           * entries have an `s` appendix which should be dropped see
-          * https://github.com/joernio/joern/issues/1348 
+          * https://github.com/joernio/joern/issues/1348
           */
         val operators = builder.addConstants(
           category = "Operators",

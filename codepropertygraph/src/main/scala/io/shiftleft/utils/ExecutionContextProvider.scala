@@ -12,4 +12,3 @@ object ExecutionContextProvider:
                     case ec: ExecutionContextExecutor => ec
                     case _                            => ExecutionContext.global
             case _ => ExecutionContext.global
-end ExecutionContextProvider
