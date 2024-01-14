@@ -17,8 +17,6 @@ jobs:
         lfs: true
     - name: Clone submodules
       run: git submodule update --init --recursive
-    - name: apt-get update
-      run: sudo apt-get update
     - name: Set up JDK
       uses: actions/setup-java@v4
       with:
@@ -31,6 +29,6 @@ jobs:
           ~/.coursier
         key: ${{ runner.os }}-sbt-${{ hashfiles('**/build.sbt') }}
     - name: Compile and run tests
-      run: sbt +test
+      run: sbt stage +test
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

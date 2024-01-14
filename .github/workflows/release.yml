@@ -21,7 +21,7 @@ jobs:
         distribution: 'temurin'
         java-version: '21'
     - name: Compile and run tests
-      run: sbt +test
+      run: sbt stage +test
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   release:
@@ -40,7 +40,7 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
-      - run: sbt compile +test
+      - run: sbt stage
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: sbt publish
