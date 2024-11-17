@@ -7,6 +7,12 @@ generatedSrcDir := (Compile/sourceDirectory).value / "generated"
 Compile/unmanagedSourceDirectories += generatedSrcDir.value
 Compile/compile := (Compile/compile).dependsOn(Projects.schema/Compile/generateDomainClasses).value
 
+ThisBuild / scalacOptions ++= Seq(
+  "-rewrite",
+  "-source",
+  "3.4-migration"
+)
+
 /* generated sources occasionally have some warnings..
  * we're trying to minimise them on a best effort basis, but don't want
  * to fail the build because of them

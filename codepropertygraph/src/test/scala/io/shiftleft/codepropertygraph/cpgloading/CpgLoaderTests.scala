@@ -11,7 +11,7 @@ import overflowdb.Config
   */
 class CpgLoaderTests extends AnyWordSpec with Matchers with BeforeAndAfterAll {
 
-  var zipFile: better.files.File = _
+  var zipFile: better.files.File = scala.compiletime.uninitialized
 
   override def beforeAll(): Unit = {
     zipFile = TestProtoCpg.createTestProtoCpg
