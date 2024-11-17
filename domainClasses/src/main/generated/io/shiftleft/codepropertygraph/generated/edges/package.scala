@@ -4,7 +4,7 @@ import overflowdb.*
 import scala.jdk.CollectionConverters.*
 
 object PropertyErrorRegister:
-    private var errorMap = Set[(Class[_], String)]()
+    private var errorMap = Set[(Class[?], String)]()
     private val logger   = org.slf4j.LoggerFactory.getLogger(getClass)
 
     def logPropertyErrorIfFirst(clazz: Class[?], propertyName: String): Unit =
@@ -13,7 +13,7 @@ object PropertyErrorRegister:
             errorMap += ((clazz, propertyName))
 
 object Factories:
-    lazy val all: Seq[EdgeFactory[_]] = Seq(
+    lazy val all: Seq[EdgeFactory[?]] = Seq(
       AliasOf.factory,
       Argument.factory,
       Ast.factory,
@@ -39,5 +39,5 @@ object Factories:
       SourceFile.factory,
       TaggedBy.factory
     )
-    lazy val allAsJava: java.util.List[EdgeFactory[_]] = all.asJava
+    lazy val allAsJava: java.util.List[EdgeFactory[?]] = all.asJava
 end Factories

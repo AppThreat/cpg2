@@ -2,7 +2,7 @@
 object Versions {
   val overflowdb = parseVersion("overflowdbVersion")
   val overflowdbCodegen = parseVersion("overflowdbCodegenVersion")
-  val scalatest  = "3.2.17"
+  val scalatest  = "3.2.19"
   val json4s     = "4.0.7"
 
   private def parseVersion(key: String): String = {
