@@ -6,7 +6,7 @@ enablePlugins(ProtobufPlugin)
 val protocLocalDir   = "protoc"
 val protocBinaryPath = s"$protocLocalDir/bin/protoc"
 ProtobufConfig / protobufProtoc := protocBinaryPath
-ProtobufConfig / version        := "3.18.0"
+ProtobufConfig / version        := "3.25.5"
 ProtobufConfig / sourceDirectories += (ProtobufConfig / protobufExternalIncludePath).value
 ProtobufConfig / protobufGenerate := (ProtobufConfig / protobufGenerate)
   .dependsOn(copyLatestCpgProto)
@@ -28,7 +28,7 @@ installProtoc := {
   import sys.process._
   import java.nio.file.Files
   // import better.files.FileExtensions
-  val protocVersion      = (ProtobufConfig / version).value
+  val protocVersion      = "3.20.1"
   val protocBinary       = new File(protocBinaryPath)
   val isAlreadyInstalled = protocBinary.exists && s"$protocBinaryPath --version".!!.contains(protocVersion)
 
