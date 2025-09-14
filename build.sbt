@@ -1,7 +1,7 @@
 name := "cpg2"
 ThisBuild / organization := "io.appthreat"
-ThisBuild / version      := "1.0.1"
-ThisBuild / scalaVersion := "3.5.2"
+ThisBuild / version      := "1.1.0"
+ThisBuild / scalaVersion := "3.7.3"
 
 // parsed by project/Versions.scala
 val overflowdbVersion = "1.0.1"
