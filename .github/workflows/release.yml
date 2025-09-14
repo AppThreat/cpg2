@@ -24,6 +24,8 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '23'
+          cache: "sbt"
+      - uses: sbt/setup-sbt@v1
       - name: Compile and run tests
         run: sbt clean stage +test
         env:
