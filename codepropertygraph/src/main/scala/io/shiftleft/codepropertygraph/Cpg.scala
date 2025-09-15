@@ -9,7 +9,7 @@ import overflowdb.traversal.help.DocSearchPackages
   */
 object Cpg:
     implicit val docSearchPackages: DocSearchPackages =
-        DocSearchPackages("io.shiftleft", "io.joern")
+        DocSearchPackages("io.shiftleft", "io.appthreat")
 
     /** Syntactic sugar for `new Cpg(graph)`. Usage: `Cpg(graph)` or simply `Cpg` if you have an
       * `implicit Graph` in scope

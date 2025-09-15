@@ -3,11 +3,13 @@ import io.shiftleft.SerializedCpg
 import io.shiftleft.codepropertygraph.Cpg
 import io.shiftleft.utils.ExecutionContextProvider
 
-import java.util.concurrent.LinkedBlockingQueue
 import scala.annotation.nowarn
 import scala.collection.mutable
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
+import java.util.concurrent.{Executors, ThreadFactory, TimeUnit, LinkedBlockingQueue}
+import java.util.concurrent.atomic.AtomicInteger
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
 
 /* ConcurrentWriterCpgPass is a possible replacement for ParallelCpgPass and NewStylePass.
  *
@@ -33,7 +35,7 @@ import scala.concurrent.{Await, ExecutionContext, Future}
  * */
 object ConcurrentWriterCpgPass:
     private val writerQueueCapacity   = 4
-    private val producerQueueCapacity = 2 + 4 * Runtime.getRuntime().availableProcessors()
+    private val producerQueueCapacity = 2 * Runtime.getRuntime.availableProcessors()
 end ConcurrentWriterCpgPass
 abstract class ConcurrentWriterCpgPass[T <: AnyRef](
   cpg: Cpg,
@@ -42,6 +44,27 @@ abstract class ConcurrentWriterCpgPass[T <: AnyRef](
 ) extends NewStyleCpgPassBase[T]:
 
     @volatile var nDiffT = -1
+
+    protected lazy val cpuOptimizedExecutionContext: ExecutionContextExecutorService =
+        val numThreads = 2 * Runtime.getRuntime.availableProcessors()
+        val threadFactory = new ThreadFactory:
+            private val counter = new AtomicInteger(0)
+            override def newThread(r: Runnable): Thread =
+                val thread = new Thread(r, s"AppThreat-cpg2-${counter.getAndIncrement()}")
+                thread.setDaemon(true)
+                thread
+        val executor = Executors.newFixedThreadPool(numThreads, threadFactory)
+        ExecutionContext.fromExecutorService(executor)
+
+    override def finish(): Unit =
+        try
+            if cpuOptimizedExecutionContext ne null then
+                if !cpuOptimizedExecutionContext.awaitTermination(10, TimeUnit.SECONDS) then
+                    cpuOptimizedExecutionContext.shutdownNow()
+        catch
+            case _: Exception =>
+        finally
+            super.finish()
 
     /** WARNING: runOnPart is executed in parallel to committing of graph modifications. The upshot
       * is that it is unsafe to read ANY data from cpg, on pain of bad race conditions
@@ -62,14 +85,14 @@ abstract class ConcurrentWriterCpgPass[T <: AnyRef](
         nDiffT = -1
         init()
         val parts = generateParts()
-        nParts = parts.size
+        nParts = parts.length
         val partIter        = parts.iterator
         val completionQueue = mutable.ArrayDeque[Future[overflowdb.BatchedUpdate.DiffGraph]]()
         val writer          = new Writer()
         val writerThread    = new Thread(writer)
         writerThread.setName("Writer")
         writerThread.start()
-        implicit val ec: ExecutionContext = ExecutionContextProvider.getExecutionContext
+        implicit val ec: ExecutionContext = this.cpuOptimizedExecutionContext
         try
             // The idea is that we have a ringbuffer completionQueue that contains the workunits that are currently in-flight.
             // We add futures to the end of the ringbuffer, and take futures from the front.
@@ -79,9 +102,9 @@ abstract class ConcurrentWriterCpgPass[T <: AnyRef](
             // as opposed to ParallelCpgPass, there is no race between diffgraph-generators to enqueue into the writer -- everything
             // is nice and ordered. Downside is that a very slow part may gum up the works (i.e. the completionQueue fills up and threads go idle)
             var done = false
-            while !done && writer.raisedException == null do
-                if writer.raisedException != null then
-                    throw writer.raisedException // will be wrapped with good stacktrace in the finally block
+            while !done && writer.raisedException.isEmpty do
+                if writer.raisedException.isDefined then
+                    throw writer.raisedException.get // will be wrapped with good stacktrace in the finally block
 
                 if completionQueue.size < producerQueueCapacity && partIter.hasNext then
                     val next = partIter.next()
@@ -103,13 +126,13 @@ abstract class ConcurrentWriterCpgPass[T <: AnyRef](
         finally
             try
                 // if the writer died on us, then the queue might be full and we could deadlock
-                if writer.raisedException == null then writer.queue.put(None)
+                if writer.raisedException.isEmpty then writer.queue.put(None)
                 writerThread.join()
                 // we need to reraise exceptions
-                if writer.raisedException != null then
+                if writer.raisedException.isDefined then
                     throw new RuntimeException(
                       "Failure in diffgraph application",
-                      writer.raisedException
+                      writer.raisedException.get
                     )
 
             finally finish()
@@ -123,7 +146,7 @@ abstract class ConcurrentWriterCpgPass[T <: AnyRef](
               ConcurrentWriterCpgPass.writerQueueCapacity
             )
 
-        @volatile var raisedException: Exception = null
+        @volatile var raisedException: Option[Exception] = None
 
         override def run(): Unit =
             try
@@ -136,13 +159,13 @@ abstract class ConcurrentWriterCpgPass[T <: AnyRef](
                             terminate = true
                         case Some(diffGraph) =>
                             nDiffT += overflowdb.BatchedUpdate
-                                .applyDiff(cpg.graph, diffGraph, keyPool.getOrElse(null), null)
+                                .applyDiff(cpg.graph, diffGraph, keyPool.orNull, null)
                                 .transitiveModifications()
                             index += 1
             catch
-                case exception: InterruptedException => None
+                case exception: InterruptedException => Thread.currentThread().interrupt()
                 case exc: Exception =>
-                    raisedException = exc
+                    raisedException = Some(exc)
                     queue.clear()
                     throw exc
     end Writer

@@ -9,7 +9,8 @@ import overflowdb.Config
 
 import java.io.InputStream
 import java.nio.file.{Files, Path}
-import java.util.{List as JList}
+import java.util.List as JList
+import scala.collection.mutable
 import scala.collection.mutable.ArrayDeque
 import scala.jdk.CollectionConverters.*
 import scala.util.{Failure, Success, Try, Using}
@@ -28,7 +29,7 @@ object ProtoCpgLoader:
         measureAndReport {
             val builder = new ProtoToCpg(overflowDbConfig)
             Using.Manager { use =>
-                val edges = ArrayDeque.empty[TmpEdge]
+                val edges = mutable.ArrayDeque.empty[TmpEdge]
                 use(new ZipArchive(fileName)).entries.foreach { entry =>
                     val inputStream = use(Files.newInputStream(entry))
                     val cpgStruct   = getNextProtoCpgFromStream(inputStream)

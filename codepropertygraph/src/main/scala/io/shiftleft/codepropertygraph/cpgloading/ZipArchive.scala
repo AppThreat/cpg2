@@ -11,7 +11,7 @@ import java.nio.file.{
     Paths,
     SimpleFileVisitor
 }
-import java.util.{Collection as JCollection}
+import java.util.Collection as JCollection
 import scala.collection.mutable.ArrayBuffer
 import scala.jdk.CollectionConverters.*
 
