@@ -7,7 +7,7 @@ import scala.annotation.nowarn
 import scala.collection.mutable
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
-import java.util.concurrent.{Executors, ThreadFactory, TimeUnit, LinkedBlockingQueue}
+import java.util.concurrent.{Executors, ThreadFactory, LinkedBlockingQueue}
 import java.util.concurrent.atomic.AtomicInteger
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
 
@@ -58,9 +58,7 @@ abstract class ConcurrentWriterCpgPass[T <: AnyRef](
 
     override def finish(): Unit =
         try
-            if cpuOptimizedExecutionContext ne null then
-                if !cpuOptimizedExecutionContext.awaitTermination(10, TimeUnit.SECONDS) then
-                    cpuOptimizedExecutionContext.shutdownNow()
+            if cpuOptimizedExecutionContext ne null then cpuOptimizedExecutionContext.shutdownNow()
         catch
             case _: Exception =>
         finally
