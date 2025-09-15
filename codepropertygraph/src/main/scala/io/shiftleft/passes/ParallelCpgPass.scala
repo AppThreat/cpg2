@@ -7,7 +7,7 @@ import scala.annotation.nowarn
 import scala.collection.mutable
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
-import java.util.concurrent.{Executors, ThreadFactory, LinkedBlockingQueue}
+import java.util.concurrent.{Executors, ThreadFactory, TimeUnit, LinkedBlockingQueue}
 import java.util.concurrent.atomic.AtomicInteger
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
 
@@ -55,6 +55,16 @@ abstract class ConcurrentWriterCpgPass[T <: AnyRef](
                 thread
         val executor = Executors.newFixedThreadPool(numThreads, threadFactory)
         ExecutionContext.fromExecutorService(executor)
+
+    override def finish(): Unit =
+        try
+            if cpuOptimizedExecutionContext ne null then
+                if !cpuOptimizedExecutionContext.awaitTermination(10, TimeUnit.SECONDS) then
+                    cpuOptimizedExecutionContext.shutdownNow()
+        catch
+            case _: Exception =>
+        finally
+            super.finish()
 
     /** WARNING: runOnPart is executed in parallel to committing of graph modifications. The upshot
       * is that it is unsafe to read ANY data from cpg, on pain of bad race conditions
