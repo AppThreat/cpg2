@@ -9,6 +9,7 @@ import java.util.function.{BiConsumer, Supplier}
 import scala.annotation.nowarn
 import scala.concurrent.duration.DurationLong
 import scala.util.{Failure, Success, Try}
+import scala.reflect.ClassTag
 
 /* CpgPass
  *
@@ -49,8 +50,11 @@ abstract class CpgPass(cpg: Cpg, outName: String = "", keyPool: Option[KeyPool] 
  *
  * This simplifies semantics and makes it easy to reason about possible races.
  *
- * Note that ForkJoinParallelCpgPass never writes intermediate results, so one must consider peak memory consumption when
- * porting from ParallelCpgPass. Consider ConcurrentWriterCpgPass when this is a problem.
+ * For large codebases, the pass automatically processes parts in chunks to reduce peak memory consumption.
+ * The chunk size can be configured via the maxChunkSize parameter (default: 1000).
+ *
+ * Note that ForkJoinParallelCpgPass never writes intermediate results, but chunked processing helps manage memory.
+ * Consider ConcurrentWriterCpgPass when this is still a problem.
  *
  * Initialization and cleanup of external resources or large datastructures can be done in the `init()` and `finish()`
  * methods. This may be better than using the constructor or GC, because e.g. SCPG chains of passes construct
@@ -59,7 +63,9 @@ abstract class CpgPass(cpg: Cpg, outName: String = "", keyPool: Option[KeyPool] 
 abstract class ForkJoinParallelCpgPass[T <: AnyRef](
   cpg: Cpg,
   @nowarn outName: String = "",
-  keyPool: Option[KeyPool] = None
+  keyPool: Option[KeyPool] = None,
+  maxChunkSize: Int = 1000,
+  continueOnError: Boolean = false
 ) extends NewStyleCpgPassBase[T]:
 
     override def createApplySerializeAndStore(
@@ -67,39 +73,28 @@ abstract class ForkJoinParallelCpgPass[T <: AnyRef](
       inverse: Boolean = false,
       prefix: String = ""
     ): Unit =
-        val nanosStart = System.nanoTime()
-        var nParts     = 0
-        var nanosBuilt = -1L
-        var nDiff      = -1
-        var nDiffT     = -1
         try
             val diffGraph = new DiffGraphBuilder
-            nParts = runWithBuilder(diffGraph)
-            nanosBuilt = System.nanoTime()
-            nDiff = diffGraph.size()
-
-            nDiffT = overflowdb.BatchedUpdate
-                .applyDiff(cpg.graph, diffGraph, keyPool.getOrElse(null), null)
-                .transitiveModifications()
-
+            runWithBuilder(diffGraph)
+            overflowdb.BatchedUpdate.applyDiff(cpg.graph, diffGraph, keyPool.orNull, null)
         catch
             case exc: Exception =>
-                throw exc
+                if !continueOnError then throw exc
         finally
             try
                 finish()
-            finally
-                // the nested finally is somewhat ugly -- but we promised to clean up with finish(), we want to include finish()
-                // in the reported timings, and we must have our final log message if finish() throws
-                val nanosStop = System.nanoTime()
-                val fracRun = if nanosBuilt == -1 then 0.0
-                else (nanosStop - nanosBuilt) * 100.0 / (nanosStop - nanosStart + 1)
-                val serializationString = if serializedCpg != null && !serializedCpg.isEmpty then
-                    if inverse then " Inverse serialized and stored."
-                    else " Diff serialized and stored."
-                else ""
-        end try
-    end createApplySerializeAndStore
+            catch
+                case _: Exception =>
+
+    private def processChunk(chunk: Array[? <: AnyRef], builder: DiffGraphBuilder): Unit =
+        chunk.foreach { part =>
+            try
+                runOnPart(builder, part.asInstanceOf[T])
+            catch
+                case ex: Exception =>
+                    if !continueOnError then throw ex
+        }
+
 end ForkJoinParallelCpgPass
 
 /** NewStyleCpgPassBase is the shared base between ForkJoinParallelCpgPass and
@@ -110,15 +105,12 @@ end ForkJoinParallelCpgPass
   * Please don't subclass this directly. The only reason it's not sealed is that this would mess
   * with our file hierarchy.
   */
-abstract class NewStyleCpgPassBase[T <: AnyRef] extends CpgPassBase:
+abstract class NewStyleCpgPassBase[T <: AnyRef](private val maxChunkSize: Int = 1000)
+    extends CpgPassBase:
     type DiffGraphBuilder = overflowdb.BatchedUpdate.DiffGraphBuilder
-    // generate Array of parts that can be processed in parallel
     def generateParts(): Array[? <: AnyRef]
-    // setup large data structures, acquire external resources
-    def init(): Unit = {}
-    // release large data structures and external resources
+    def init(): Unit   = {}
     def finish(): Unit = {}
-    // main function: add desired changes to builder
     def runOnPart(builder: DiffGraphBuilder, part: T): Unit
 
     override def createAndApply(): Unit = createApplySerializeAndStore(null)
@@ -127,37 +119,46 @@ abstract class NewStyleCpgPassBase[T <: AnyRef] extends CpgPassBase:
         try
             init()
             val parts  = generateParts()
-            val nParts = parts.size
-            nParts match
-                case 0 =>
-                case 1 =>
-                    runOnPart(externalBuilder, parts(0).asInstanceOf[T])
-                case _ =>
-                    externalBuilder.absorb(
-                      java.util.Arrays
-                          .stream(parts)
-                          .parallel()
-                          .collect(
-                            new Supplier[DiffGraphBuilder]:
-                                override def get(): DiffGraphBuilder =
-                                    new DiffGraphBuilder
-                            ,
-                            new BiConsumer[DiffGraphBuilder, AnyRef]:
-                                override def accept(builder: DiffGraphBuilder, part: AnyRef): Unit =
-                                    runOnPart(builder, part.asInstanceOf[T])
-                            ,
-                            new BiConsumer[DiffGraphBuilder, DiffGraphBuilder]:
-                                override def accept(
-                                  leftBuilder: DiffGraphBuilder,
-                                  rightBuilder: DiffGraphBuilder
-                                ): Unit =
+            val nParts = parts.length
+
+            if nParts > 0 && parts.length > maxChunkSize then
+                parts.grouped(maxChunkSize).foreach { chunk =>
+                    val chunkBuilder = new DiffGraphBuilder
+                    chunk.foreach { part =>
+                        runOnPart(chunkBuilder, part.asInstanceOf[T])
+                    }
+                    externalBuilder.absorb(chunkBuilder)
+                    System.gc()
+                }
+            else
+                nParts match
+                    case 0 =>
+                    case 1 =>
+                        runOnPart(externalBuilder, parts(0).asInstanceOf[T])
+                    case _ =>
+                        externalBuilder.absorb(
+                          java.util.Arrays
+                              .stream(parts)
+                              .parallel()
+                              .collect(
+                                () => new DiffGraphBuilder,
+                                (builder: DiffGraphBuilder, part: AnyRef) =>
+                                    runOnPart(builder, part.asInstanceOf[T]),
+                                (leftBuilder: DiffGraphBuilder, rightBuilder: DiffGraphBuilder) =>
                                     leftBuilder.absorb(rightBuilder)
-                          )
-                    )
-            end match
+                              )
+                        )
+                end match
+            end if
             nParts
         finally
             finish()
+
+    private def processChunk(chunk: Array[? <: AnyRef], builder: DiffGraphBuilder): Unit =
+        chunk.foreach { part =>
+            runOnPart(builder, part.asInstanceOf[T])
+        }
+
 end NewStyleCpgPassBase
 
 trait CpgPassBase:

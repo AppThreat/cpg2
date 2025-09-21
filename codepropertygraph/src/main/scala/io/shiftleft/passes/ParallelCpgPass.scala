@@ -34,8 +34,10 @@ import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
  * passes eagerly, and releases them only when the entire chain has run.
  * */
 object ConcurrentWriterCpgPass:
-    private val writerQueueCapacity   = 4
-    private val producerQueueCapacity = 2 * Runtime.getRuntime.availableProcessors()
+    private val cores                 = Runtime.getRuntime.availableProcessors()
+    private val writerQueueCapacity   = Math.max(2, (0.75 * cores).toInt)
+    private val producerQueueCapacity = Math.max(4, (1.5 * cores).toInt)
+    private val writerBatchSize       = 4
 end ConcurrentWriterCpgPass
 abstract class ConcurrentWriterCpgPass[T <: AnyRef](
   cpg: Cpg,
@@ -43,7 +45,7 @@ abstract class ConcurrentWriterCpgPass[T <: AnyRef](
   keyPool: Option[KeyPool] = None
 ) extends NewStyleCpgPassBase[T]:
 
-    @volatile var nDiffT = -1
+    @volatile private var nDiffT = -1
 
     protected lazy val cpuOptimizedExecutionContext: ExecutionContextExecutorService =
         val numThreads = 2 * Runtime.getRuntime.availableProcessors()
@@ -88,26 +90,16 @@ abstract class ConcurrentWriterCpgPass[T <: AnyRef](
         val completionQueue = mutable.ArrayDeque[Future[overflowdb.BatchedUpdate.DiffGraph]]()
         val writer          = new Writer()
         val writerThread    = new Thread(writer)
-        writerThread.setName("Writer")
+        writerThread.setName("AppThreat cpg2 Writer")
         writerThread.start()
         implicit val ec: ExecutionContext = this.cpuOptimizedExecutionContext
         try
-            // The idea is that we have a ringbuffer completionQueue that contains the workunits that are currently in-flight.
-            // We add futures to the end of the ringbuffer, and take futures from the front.
-            // then we await the future from the front, and add it to the writer-queue.
-            // the end result is that we get deterministic output (esp. deterministic order of changes), while having up to one
-            // writer-thread and up to producerQueueCapacity many threads in-flight.
-            // as opposed to ParallelCpgPass, there is no race between diffgraph-generators to enqueue into the writer -- everything
-            // is nice and ordered. Downside is that a very slow part may gum up the works (i.e. the completionQueue fills up and threads go idle)
             var done = false
             while !done && writer.raisedException.isEmpty do
                 if writer.raisedException.isDefined then
-                    throw writer.raisedException.get // will be wrapped with good stacktrace in the finally block
-
+                    throw writer.raisedException.get
                 if completionQueue.size < producerQueueCapacity && partIter.hasNext then
                     val next = partIter.next()
-                    // todo: Verify that we get FIFO scheduling; otherwise, do something about it.
-                    // if this e.g. used LIFO with 4 cores and 18 size of ringbuffer, then 3 cores may idle while we block on the front item.
                     completionQueue.append(Future.apply {
                         val builder = new DiffGraphBuilder
                         runOnPart(builder, next.asInstanceOf[T])
@@ -120,51 +112,56 @@ abstract class ConcurrentWriterCpgPass[T <: AnyRef](
                     writer.queue.put(Some(res))
                 else
                     done = true
-            end while
         finally
             try
-                // if the writer died on us, then the queue might be full and we could deadlock
                 if writer.raisedException.isEmpty then writer.queue.put(None)
                 writerThread.join()
-                // we need to reraise exceptions
                 if writer.raisedException.isDefined then
                     throw new RuntimeException(
-                      "Failure in diffgraph application",
+                      "Failure in ConcurrentWriterCpgPass",
                       writer.raisedException.get
                     )
-
             finally finish()
         end try
     end createApplySerializeAndStore
 
     private class Writer() extends Runnable:
-
-        val queue =
-            new LinkedBlockingQueue[Option[overflowdb.BatchedUpdate.DiffGraph]](
-              ConcurrentWriterCpgPass.writerQueueCapacity
-            )
+        val queue = new LinkedBlockingQueue[Option[overflowdb.BatchedUpdate.DiffGraph]](
+          ConcurrentWriterCpgPass.writerQueueCapacity
+        )
 
         @volatile var raisedException: Option[Exception] = None
 
         override def run(): Unit =
             try
                 nDiffT = 0
-                var terminate  = false
-                var index: Int = 0
-                while !terminate do
+                val batchBuffer = new java.util.ArrayList[overflowdb.BatchedUpdate.DiffGraph](
+                  ConcurrentWriterCpgPass.writerBatchSize
+                )
+                while true do
                     queue.take() match
                         case None =>
-                            terminate = true
+                            flushBatch(batchBuffer)
+                            return
                         case Some(diffGraph) =>
-                            nDiffT += overflowdb.BatchedUpdate
-                                .applyDiff(cpg.graph, diffGraph, keyPool.orNull, null)
-                                .transitiveModifications()
-                            index += 1
+                            batchBuffer.add(diffGraph)
+                            if batchBuffer.size() >= ConcurrentWriterCpgPass.writerBatchSize then
+                                flushBatch(batchBuffer)
             catch
                 case exception: InterruptedException => Thread.currentThread().interrupt()
                 case exc: Exception =>
                     raisedException = Some(exc)
                     queue.clear()
                     throw exc
+
+        private def flushBatch(batch: java.util.ArrayList[overflowdb.BatchedUpdate.DiffGraph])
+          : Unit =
+            if batch.size() > 0 then
+                batch.forEach { diffGraph =>
+                    nDiffT += overflowdb.BatchedUpdate
+                        .applyDiff(cpg.graph, diffGraph, keyPool.orNull, null)
+                        .transitiveModifications()
+                }
+                batch.clear()
     end Writer
 end ConcurrentWriterCpgPass

@@ -7,9 +7,13 @@ class ParallelIteratorExecutor[T](iterator: Iterator[T])(implicit
   executionContext: ExecutionContext
 ):
     def map[D](func: T => D): Iterator[D] =
-        val futures = Future.traverse(iterator) { element =>
-            Future {
-                func(element)
-            }
+        val batchSize = 1000
+        iterator.grouped(batchSize).flatMap { batch =>
+            val futures = batch.map { element =>
+                Future { func(element) }
+            }.toList
+            Await.result(
+              Future.sequence(futures),
+              Duration(10, java.util.concurrent.TimeUnit.SECONDS)
+            )
         }
-        Await.result(futures, Duration.Inf)
