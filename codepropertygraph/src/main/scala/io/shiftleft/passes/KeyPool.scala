@@ -38,8 +38,8 @@ class IntervalKeyPool(val first: Long, val last: Long) extends KeyPool:
                 new IntervalKeyPool(poolFirst, poolFirst + k - 1)
             }.iterator
 
-    private val cur: AtomicLong = new AtomicLong(first - 1)
-    private var valid: Boolean  = true
+    private lazy val cur: AtomicLong     = new AtomicLong(first - 1)
+    @volatile private var valid: Boolean = true
 end IntervalKeyPool
 
 /** A key pool that returns elements of `seq` in order in a thread-safe manner.
@@ -47,7 +47,7 @@ end IntervalKeyPool
 class SequenceKeyPool(seq: Seq[Long]) extends KeyPool:
 
     val seqLen: Int = seq.size
-    var cur         = new AtomicInteger(-1)
+    private val cur = new AtomicInteger(-1)
 
     override def next: Long =
         val i = cur.incrementAndGet()

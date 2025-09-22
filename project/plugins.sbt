@@ -1,5 +1,5 @@
 addSbtPlugin("com.github.sbt"    % "sbt-protobuf"         % "0.8.1")
 addSbtPlugin("org.scalameta"     % "sbt-scalafmt"         % "2.5.2")
-addSbtPlugin("com.github.sbt"    % "sbt-native-packager"  % "1.10.4")
+addSbtPlugin("com.github.sbt"    % "sbt-native-packager"  % "1.11.1")
 addSbtPlugin("com.codecommit"    % "sbt-github-packages"  % "0.5.3")
 addSbtPlugin("io.shiftleft"      % "sbt-overflowdb"       % "2.103")

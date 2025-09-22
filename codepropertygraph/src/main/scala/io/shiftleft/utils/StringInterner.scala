@@ -13,8 +13,7 @@ object StringInterner:
     val DefaultMaxStringLength: Int = 1024
     val DefaultInitialSize: Int     = 64 * 1024
 
-    val noop: StringInterner = new StringInterner:
-        override def intern(s: String): String = s
+    val noop: StringInterner = (s: String) => s
 
     /** Creates a string interner that will hold strong references to the interned objects and they
       * wont be GC'ed until reference to the interner is released.
