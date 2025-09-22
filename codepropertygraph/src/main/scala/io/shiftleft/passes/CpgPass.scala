@@ -76,7 +76,12 @@ abstract class ForkJoinParallelCpgPass[T <: AnyRef](
         try
             val diffGraph = new DiffGraphBuilder
             runWithBuilder(diffGraph)
-            overflowdb.BatchedUpdate.applyDiff(cpg.graph, diffGraph, keyPool.orNull, null)
+            overflowdb.BatchedUpdate.applyDiff(
+              cpg.graph,
+              diffGraph,
+              keyPool.orNull,
+              null
+            ).transitiveModifications()
         catch
             case exc: Exception =>
                 if !continueOnError then throw exc

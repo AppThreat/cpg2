@@ -37,7 +37,6 @@ ThisBuild / scalacOptions ++= Seq(
 )
 
 ThisBuild / javacOptions ++= Seq(
-  "-g", // debug symbols
   "-Xlint",
   "--release", "21"
 ) ++ {
