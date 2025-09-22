@@ -11,7 +11,7 @@ class SerializedCpg extends AutoCloseable:
 
     /** We allow creating a dummy serialized CPG that does not do anything.
       */
-    private var zipFileSystem: FileSystem = null
+    private var zipFileSystem: FileSystem = scala.compiletime.uninitialized
     private var counter                   = 0
 
     /** Create Serialized CPG from existing file. If the file does not exist, an empty Serialized
@@ -39,7 +39,7 @@ class SerializedCpg extends AutoCloseable:
     @throws[IOException]
     def addOverlay(overlay: GeneratedMessageV3, name: String): Unit =
         if !isEmpty then
-            val pathInZip = zipFileSystem.getPath(s"${counter}_${name}")
+            val pathInZip = zipFileSystem.getPath(s"${counter}_$name")
             counter += 1
             val outputStream = Files.newOutputStream(pathInZip)
             overlay.writeTo(outputStream)

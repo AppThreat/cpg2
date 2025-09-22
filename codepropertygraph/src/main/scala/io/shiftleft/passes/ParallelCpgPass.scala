@@ -125,7 +125,7 @@ abstract class ConcurrentWriterCpgPass[T <: AnyRef](
         end try
     end createApplySerializeAndStore
 
-    private class Writer() extends Runnable:
+    private class Writer extends Runnable:
         val queue = new LinkedBlockingQueue[Option[overflowdb.BatchedUpdate.DiffGraph]](
           ConcurrentWriterCpgPass.writerQueueCapacity
         )

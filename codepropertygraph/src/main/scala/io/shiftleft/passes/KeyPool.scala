@@ -46,8 +46,8 @@ end IntervalKeyPool
   */
 class SequenceKeyPool(seq: Seq[Long]) extends KeyPool:
 
-    val seqLen: Int           = seq.size
-    @volatile private var cur = new AtomicInteger(-1)
+    val seqLen: Int = seq.size
+    private val cur = new AtomicInteger(-1)
 
     override def next: Long =
         val i = cur.incrementAndGet()

@@ -52,7 +52,7 @@ class ProtoToCpg(overflowConfig: Config = Config.withoutOverflow):
             .map(prop => (prop.getName.name, prop.getValue))
             .map(toProperty)
         try
-            if node.getKey() == -1 then
+            if node.getKey == -1 then
                 throw new IllegalArgumentException(
                   "node has illegal key -1. Something is wrong with the cpg."
                 )
