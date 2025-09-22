@@ -14,6 +14,6 @@ class ParallelIteratorExecutor[T](iterator: Iterator[T])(implicit
             }.toList
             Await.result(
               Future.sequence(futures),
-              Duration(10, java.util.concurrent.TimeUnit.SECONDS)
+              Duration.Inf
             )
         }
