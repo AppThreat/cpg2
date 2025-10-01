@@ -3,13 +3,12 @@ import io.shiftleft.SerializedCpg
 import io.shiftleft.codepropertygraph.Cpg
 import io.shiftleft.utils.ExecutionContextProvider
 
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.{Executors, LinkedBlockingQueue, ThreadFactory}
 import scala.annotation.nowarn
 import scala.collection.mutable
 import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, ExecutionContext, Future}
-import java.util.concurrent.{Executors, ThreadFactory, LinkedBlockingQueue}
-import java.util.concurrent.atomic.AtomicInteger
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
+import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutorService, Future}
 
 /* ConcurrentWriterCpgPass is a possible replacement for ParallelCpgPass and NewStylePass.
  *
@@ -39,6 +38,7 @@ object ConcurrentWriterCpgPass:
     private val producerQueueCapacity = Math.max(4, (1.5 * cores).toInt)
     private val writerBatchSize       = 4
 end ConcurrentWriterCpgPass
+
 abstract class ConcurrentWriterCpgPass[T <: AnyRef](
   cpg: Cpg,
   @nowarn outName: String = "",
@@ -48,14 +48,7 @@ abstract class ConcurrentWriterCpgPass[T <: AnyRef](
     @volatile private var nDiffT = -1
 
     protected lazy val cpuOptimizedExecutionContext: ExecutionContextExecutorService =
-        val numThreads = 2 * Runtime.getRuntime.availableProcessors()
-        val threadFactory = new ThreadFactory:
-            private val counter = new AtomicInteger(0)
-            override def newThread(r: Runnable): Thread =
-                val thread = new Thread(r, s"AppThreat-cpg2-${counter.getAndIncrement()}")
-                thread.setDaemon(true)
-                thread
-        val executor = Executors.newFixedThreadPool(numThreads, threadFactory)
+        val executor = Executors.newVirtualThreadPerTaskExecutor()
         ExecutionContext.fromExecutorService(executor)
 
     override def finish(): Unit =
@@ -79,9 +72,8 @@ abstract class ConcurrentWriterCpgPass[T <: AnyRef](
       prefix: String = ""
     ): Unit =
         import ConcurrentWriterCpgPass.producerQueueCapacity
-        val nanosStart = System.nanoTime()
-        var nParts     = 0
-        var nDiff      = 0
+        var nParts = 0
+        var nDiff  = 0
         nDiffT = -1
         init()
         val parts = generateParts()
