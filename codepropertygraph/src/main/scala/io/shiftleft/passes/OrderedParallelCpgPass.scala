@@ -10,8 +10,8 @@ import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
 
 object OrderedParallelCpgPass:
     private val cores           = Runtime.getRuntime.availableProcessors()
-    private val queueCapacity   = Math.max(2, cores)
-    private val writerBatchSize = 4
+    private val queueCapacity   = Math.max(2, (0.75 * cores).toInt)
+    private val writerBatchSize = Math.min(4, cores)
 
 abstract class OrderedParallelCpgPass[T <: AnyRef](
   cpg: Cpg,
