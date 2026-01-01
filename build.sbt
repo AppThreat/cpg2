@@ -1,6 +1,6 @@
 name := "cpg2"
 ThisBuild / organization := "io.appthreat"
-ThisBuild / version      := "2.1.1"
+ThisBuild / version      := "2.1.2"
 ThisBuild / scalaVersion := "3.6.2"
 
 // parsed by project/Versions.scala
