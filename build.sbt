@@ -4,7 +4,7 @@ ThisBuild / version      := "2.1.3"
 ThisBuild / scalaVersion := "3.6.2"
 
 // parsed by project/Versions.scala
-val overflowdbVersion = "2.1.0"
+val overflowdbVersion = "2.2.0"
 val overflowdbCodegenVersion = "2.103"
 
 ThisBuild / Test / fork           := true
