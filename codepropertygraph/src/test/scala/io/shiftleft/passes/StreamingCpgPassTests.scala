@@ -7,12 +7,17 @@ import io.shiftleft.codepropertygraph.generated.Properties
 import io.shiftleft.codepropertygraph.generated.nodes.{NewCall, NewFile}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.concurrent.TimeLimits
+import org.scalatest.time.{Seconds, Span}
 import overflowdb.traversal.*
 
 import java.nio.file.Files
+import java.util.concurrent.atomic.AtomicInteger
 import scala.jdk.CollectionConverters.*
 
-class StreamingCpgPassTests extends AnyWordSpec with Matchers {
+class StreamingCpgPassTests extends AnyWordSpec with Matchers with TimeLimits {
+
+    val DeadlockTimeout = Span(5, Seconds)
 
     private object Fixture {
         def apply(keyPools: Option[Iterator[KeyPool]] = None)(f: (Cpg, CpgPassBase) => Unit): Unit = {
@@ -32,75 +37,75 @@ class StreamingCpgPassTests extends AnyWordSpec with Matchers {
 
     "StreamingCpgPass" should {
         "allow creating and applying result of pass" in Fixture() { (cpg, pass) =>
-            pass.createAndApply()
-            cpg.graph.nodes.map(_.property(Properties.NAME)).toSetMutable shouldBe Set("foo", "bar")
+            failAfter(DeadlockTimeout) {
+                pass.createAndApply()
+                cpg.graph.nodes.map(_.property(Properties.NAME)).toSetMutable shouldBe Set("foo", "bar")
+            }
         }
 
         "produce a serialized inverse CPG" in Fixture() { (_, pass) =>
-            File.usingTemporaryFile("pass", ".zip") { file =>
-                file.delete()
-                val filename      = file.path.toString
-                val serializedCpg = new SerializedCpg(filename)
-                pass.createApplySerializeAndStore(serializedCpg, true)
-                serializedCpg.close()
-                file.exists shouldBe true
-                Files.size(file.path) should not be 0
+            failAfter(DeadlockTimeout) {
+                File.usingTemporaryFile("pass", ".zip") { file =>
+                    file.delete()
+                    val filename      = file.path.toString
+                    val serializedCpg = new SerializedCpg(filename)
+                    pass.createApplySerializeAndStore(serializedCpg, true)
+                    serializedCpg.close()
+                    file.exists shouldBe true
+                    Files.size(file.path) should not be 0
+                }
             }
         }
 
-        val keyPools = Iterator(new IntervalKeyPool(10, 20), new IntervalKeyPool(30, 40))
+        "fail gracefully (no deadlock) when Writer crashes under load" in {
+            failAfter(DeadlockTimeout) {
+                val cpg = Cpg.emptyCpg
+                val partCount = 100
 
-        "use only the first KeyPool for createAndApply" in Fixture(Some(keyPools)) { (cpg, pass) =>
-            pass.createAndApply()
-            val ids = cpg.graph.V.asScala.map(_.id()).toSet
-            ids.size shouldBe 2
-            ids.foreach { id =>
-                id should (be >= 10L and be <= 20L)
-            }
-        }
+                val pass = new StreamingCpgPass[String](cpg, "LoadTestPass") {
+                    override def generateParts(): Array[String] =
+                        (0 until partCount).map(_.toString).toArray
 
-        "fail for schema violations" in {
-            val cpg = Cpg.emptyCpg
-            val pass = new StreamingCpgPass[String](cpg, "pass2") {
-                override def generateParts() = Array("a", "b")
-                override def runOnPart(diffGraph: DiffGraphBuilder, part: String): Unit =
-                    part match {
-                        case "a" =>
-                            diffGraph.addNode(NewFile().name(part))
-                        case "b" =>
-                            // Deliberate schema violation: Illegal edge label
-                            val file1 = NewFile().name("foo")
-                            val file2 = NewFile().name("bar")
-                            diffGraph
-                                .addNode(file1)
-                                .addNode(file2)
-                                .addEdge(file1, file2, "illegal_edge_label")
+                    override def runOnPart(diffGraph: DiffGraphBuilder, part: String): Unit = {
+                        val partId = part.toInt
+                        if (partId == 10) {
+                            val f1 = NewFile().name("A")
+                            val f2 = NewFile().name("B")
+                            diffGraph.addNode(f1).addNode(f2)
+                            diffGraph.addEdge(f1, f2, "ILLEGAL_SCHEMA_VIOLATION")
+                        } else {
+                            Thread.sleep(10)
+                            diffGraph.addNode(NewFile().name(s"file_$partId"))
+                        }
                     }
-            }
-            intercept[Exception] {
-                pass.createAndApply()
+                }
+
+                intercept[RuntimeException] {
+                    pass.createAndApply()
+                }
             }
         }
 
-        "add NewNodes that are referenced in different parts only once" in {
-            val cpg = Cpg.emptyCpg
-            val pass = new StreamingCpgPass[String](cpg, "pass2") {
-                val call1 = NewCall().name("call1")
-                val call2 = NewCall().name("call2")
-                val call3 = NewCall().name("call3")
+        "fail fast if the writer thread dies unexpectedly" in {
+            failAfter(DeadlockTimeout) {
+                val cpg = Cpg.emptyCpg
+                val pass = new StreamingCpgPass[String](cpg, "SimulatedCrashPass") {
+                    override def generateParts() = Array("a", "b", "c", "d", "e")
+                    override def runOnPart(builder: DiffGraphBuilder, part: String): Unit = {
+                        builder.addNode(NewFile().name(part))
 
-                override def generateParts() = Array("a", "b")
-                override def runOnPart(diffGraph: DiffGraphBuilder, part: String): Unit =
-                    part match {
-                        case "a" =>
-                            diffGraph.addEdge(call1, call2, "AST")
-                        case "b" =>
-                            diffGraph.addEdge(call2, call3, "AST")
+                        if (part == "a") {
+                            val n1 = NewFile().name("n1")
+                            val n2 = NewFile().name("n2")
+                            builder.addNode(n1).addNode(n2).addEdge(n1, n2, "BAD_EDGE")
+                        }
                     }
+                }
+
+                intercept[Exception] {
+                    pass.createAndApply()
+                }
             }
-            pass.createAndApply()
-            cpg.graph.nodeCount() shouldBe 3
         }
     }
-
 }

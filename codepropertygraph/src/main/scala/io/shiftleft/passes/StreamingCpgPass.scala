@@ -70,11 +70,13 @@ abstract class StreamingCpgPass[T <: AnyRef](
                         val builder = new DiffGraphBuilder
                         runOnPart(builder, part.asInstanceOf[T])
                         val diff = builder.build()
-                        writer.queue.put(Some(diff))
+                        if writer.raisedException.isEmpty then
+                            writer.queue.put(Some(diff))
                     catch
                         case t: Throwable =>
-                            val e = if t.isInstanceOf[Exception] then t.asInstanceOf[Exception]
-                            else new RuntimeException(t)
+                            val e = t match
+                                case exception: Exception => exception
+                                case _                    => new RuntimeException(t)
                             writer.raisedException = Some(e)
                             try writer.queue.offer(None)
                             catch case _: Exception => ()
@@ -82,8 +84,15 @@ abstract class StreamingCpgPass[T <: AnyRef](
                         semaphore.release()
                 }
             end while
-            semaphore.acquire(producerQueueCapacity)
-
+            var permitsAcquired = 0
+            while permitsAcquired < producerQueueCapacity do
+                if writer.raisedException.isDefined || !writerThread.isAlive then
+                    throw new RuntimeException(
+                      "Writer thread failed while waiting for workers",
+                      writer.raisedException.orNull
+                    )
+                if semaphore.tryAcquire(1, 100, java.util.concurrent.TimeUnit.MILLISECONDS) then
+                    permitsAcquired += 1
         finally
             try
                 if writer.raisedException.isEmpty then writer.queue.put(None)
@@ -123,8 +132,11 @@ abstract class StreamingCpgPass[T <: AnyRef](
                                 flushBatch(batchBuffer)
             catch
                 case exception: InterruptedException => Thread.currentThread().interrupt()
-                case exc: Exception =>
-                    raisedException = Some(exc)
+                case t: Throwable =>
+                    val e = t match
+                        case exception: Exception => exception
+                        case _                    => new RuntimeException(t)
+                    raisedException = Some(e)
                     queue.clear()
 
         private def flushBatch(batch: java.util.ArrayList[overflowdb.BatchedUpdate.DiffGraph])
