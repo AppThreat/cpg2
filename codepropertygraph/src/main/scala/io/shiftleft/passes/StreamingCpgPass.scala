@@ -9,8 +9,8 @@ import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService, Futu
 
 object StreamingCpgPass:
     private val cores                 = Runtime.getRuntime.availableProcessors()
-    private val writerQueueCapacity   = Math.max(2, (0.75 * cores).toInt)
-    private val producerQueueCapacity = Math.max(4, (1.5 * cores).toInt)
+    private val writerQueueCapacity   = Math.max(2, (0.5 * cores).toInt)
+    private val producerQueueCapacity = Math.max(4, (0.7 * cores).toInt)
     private val writerBatchSize       = 4
 
 /** A replacement for ConcurrentWriterCpgPass that trades deterministic Node IDs for significantly

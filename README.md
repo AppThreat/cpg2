@@ -87,7 +87,7 @@ CPG2 leverages JDK 21+ Virtual Threads (`Executors.newVirtualThreadPerTaskExecut
 
 Both `StreamingCpgPass` and `OrderedParallelCpgPass` implement strict backpressure.
 
-- **Producer Limit:** `Math.max(4, 1.5 * cores)`
+- **Producer Limit:** `Math.max(4, 0.7 * cores)`
 - **Why?** Creating AST nodes is memory-expensive. Allowing unbounded parallelism (e.g., submitting 10,000 files to a thread pool) causes the Heap to fill with `IASTTranslationUnit` objects faster than the Writer can serialize them to disk. The Semaphore/Active-Count mechanism ensures the system only bites off what it can chew.
 
 ### KeyPools and IDs
