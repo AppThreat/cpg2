@@ -104,7 +104,7 @@ For passes that need to allocate IDs (e.g., creating new nodes), pass a `KeyPool
 ### build.sbt
 
 ```scala
-libraryDependencies += "io.appthreat" %% "cpg2" % "2.1.2"
+libraryDependencies += "io.appthreat" %% "cpg2" % "2.1.6"
 ```
 
 ### Implementing a Pass
