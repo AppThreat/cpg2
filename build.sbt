@@ -1,10 +1,10 @@
 name := "cpg2"
 ThisBuild / organization := "io.appthreat"
-ThisBuild / version      := "2.1.6"
-ThisBuild / scalaVersion := "3.6.2"
+ThisBuild / version      := "3.0.0"
+ThisBuild / scalaVersion := "3.8.4"
 
 // parsed by project/Versions.scala
-val overflowdbVersion = "2.2.1"
+val overflowdbVersion = "3.0.0"
 val overflowdbCodegenVersion = "2.103"
 
 ThisBuild / Test / fork           := true
@@ -38,11 +38,11 @@ ThisBuild / scalacOptions ++= Seq(
 
 ThisBuild / javacOptions ++= Seq(
   "-Xlint",
-  "--release", "21"
+  "--release", "23"
 ) ++ {
   // fail early if users with JDK11 try to run this
   val javaVersion = sys.props("java.specification.version").toFloat
-  assert(javaVersion.toInt >= 21, s"this build requires JDK21+ - you're using $javaVersion")
+  assert(javaVersion.toInt >= 23, s"this build requires JDK23+ - you're using $javaVersion")
   Nil
 }
 

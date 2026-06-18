@@ -86,6 +86,48 @@ class StreamingCpgPassTests extends AnyWordSpec with Matchers with TimeLimits {
             }
         }
 
+        "apply every part regardless of the configured writer batch size" in {
+            failAfter(DeadlockTimeout) {
+                val prop      = "odb.streamingpass.writerBatchSize"
+                val previous  = Option(System.getProperty(prop))
+                val partCount = 200
+                try
+                    for batchSize <- Seq(1, 3, 32, partCount + 50) do
+                        System.setProperty(prop, batchSize.toString)
+                        StreamingCpgPass.writerBatchSize shouldBe batchSize
+                        val cpg = Cpg.emptyCpg
+                        val pass = new StreamingCpgPass[String](cpg, "BatchSizePass") {
+                            override def generateParts(): Array[String] =
+                                (0 until partCount).map(i => s"file_$i").toArray
+                            override def runOnPart(
+                              diffGraph: DiffGraphBuilder,
+                              part: String
+                            ): Unit =
+                                diffGraph.addNode(NewFile().name(part))
+                        }
+                        pass.createAndApply()
+                        cpg.graph.nodes.map(_.property(Properties.NAME)).toSetMutable shouldBe
+                            (0 until partCount).map(i => s"file_$i").toSet
+                finally
+                    previous match
+                        case Some(v) => System.setProperty(prop, v)
+                        case None    => System.clearProperty(prop)
+            }
+        }
+
+        "fall back to the default writer batch size for invalid system properties" in {
+            val prop     = "odb.streamingpass.writerBatchSize"
+            val previous = Option(System.getProperty(prop))
+            try
+                for invalid <- Seq("0", "-5", "not-a-number") do
+                    System.setProperty(prop, invalid)
+                    StreamingCpgPass.writerBatchSize shouldBe 32
+            finally
+                previous match
+                    case Some(v) => System.setProperty(prop, v)
+                    case None    => System.clearProperty(prop)
+        }
+
         "fail fast if the writer thread dies unexpectedly" in {
             failAfter(DeadlockTimeout) {
                 val cpg = Cpg.emptyCpg

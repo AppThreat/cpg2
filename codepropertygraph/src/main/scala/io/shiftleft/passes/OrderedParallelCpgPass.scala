@@ -9,9 +9,19 @@ import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
 
 object OrderedParallelCpgPass:
-    private val cores           = Runtime.getRuntime.availableProcessors()
-    private val queueCapacity   = Math.max(2, (0.5 * cores).toInt)
-    private val writerBatchSize = Math.min(4, (0.7 * cores).toInt)
+    import PassConfig.{cores, intProp}
+
+    /** Tuning knobs, overridable via system properties (see [[PassConfig]]); invalid values fall
+      * back to the core-derived defaults.
+      */
+    private[passes] def queueCapacity: Int =
+        intProp("odb.orderedparallelpass.queueCapacity", Math.max(2, (0.5 * cores).toInt))
+    private[passes] def writerBatchSize: Int =
+        // guard against a 0 batch size on low-core machines, which would flush on every item
+        intProp(
+          "odb.orderedparallelpass.writerBatchSize",
+          Math.max(1, Math.min(4, (0.7 * cores).toInt))
+        )
 
 abstract class OrderedParallelCpgPass[T <: AnyRef](
   cpg: Cpg,
@@ -38,7 +48,7 @@ abstract class OrderedParallelCpgPass[T <: AnyRef](
       inverse: Boolean = false,
       prefix: String = ""
     ): Unit =
-        import OrderedParallelCpgPass.queueCapacity
+        val queueCapacity = OrderedParallelCpgPass.queueCapacity
 
         nDiffT = -1
         init()
@@ -133,6 +143,7 @@ abstract class OrderedParallelCpgPass[T <: AnyRef](
     end createApplySerializeAndStore
 
     private class Writer extends Runnable:
+        private val batchSize = OrderedParallelCpgPass.writerBatchSize
         val queue = new LinkedBlockingQueue[Option[overflowdb.BatchedUpdate.DiffGraph]](
           OrderedParallelCpgPass.queueCapacity
         )
@@ -143,7 +154,7 @@ abstract class OrderedParallelCpgPass[T <: AnyRef](
             try
                 nDiffT = 0
                 val batchBuffer = new java.util.ArrayList[overflowdb.BatchedUpdate.DiffGraph](
-                  OrderedParallelCpgPass.writerBatchSize
+                  batchSize
                 )
                 while true do
                     if raisedException.isDefined then return
@@ -154,7 +165,7 @@ abstract class OrderedParallelCpgPass[T <: AnyRef](
                             return
                         case Some(diffGraph) =>
                             batchBuffer.add(diffGraph)
-                            if batchBuffer.size() >= OrderedParallelCpgPass.writerBatchSize then
+                            if batchBuffer.size() >= batchSize then
                                 flushBatch(batchBuffer)
             catch
                 case exception: InterruptedException => Thread.currentThread().interrupt()
