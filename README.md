@@ -81,7 +81,7 @@ Unlike the streaming passes, this follows a `fork/join` model. It reads the _ent
 
 ### Virtual Threads
 
-CPG2 leverages JDK 21+ Virtual Threads (`Executors.newVirtualThreadPerTaskExecutor`) for IO-bound tasks (like parsing C/C++ files where disk IO or head-lock contention is high). This allows thousands of concurrent parsers without the overhead of OS threads.
+CPG2 leverages JDK Virtual Threads (`Executors.newVirtualThreadPerTaskExecutor`) for IO-bound tasks (like parsing C/C++ files where disk IO or head-lock contention is high). This allows thousands of concurrent parsers without the overhead of OS threads.
 
 ### Backpressure & Memory Safety
 
