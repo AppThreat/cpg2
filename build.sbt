@@ -32,7 +32,7 @@ lazy val schema2json       = Projects.schema2json
 
 ThisBuild / scalacOptions ++= Seq(
   "-release",
-  "21",
+  "23",
   "-deprecation"
 )
 

@@ -7,7 +7,7 @@ generatedSrcDir := (Compile/sourceDirectory).value / "generated"
 Compile/unmanagedSourceDirectories += generatedSrcDir.value
 Compile/compile := (Compile/compile).dependsOn(Projects.schema/Compile/generateDomainClasses).value
 
-ThisBuild / scalacOptions ++= Seq(
+Compile / scalacOptions ++= Seq(
   "-rewrite",
   "-source",
   "3.4-migration"

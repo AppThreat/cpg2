@@ -6,21 +6,21 @@ import org.json4s.{Formats, NoTypeHints}
 import overflowdb.schema.Property.Cardinality
 import overflowdb.schema.{AbstractNodeType, NodeBaseType, NodeType, Property, SchemaInfo}
 
-object Schema2Json extends App:
-
+object Schema2Json:
     val schema = CpgSchema.instance
 
-    implicit val formats: AnyRef & Formats =
-        Serialization.formats(NoTypeHints)
+    @main def run(): Unit =
+        implicit val formats: AnyRef & Formats =
+            Serialization.formats(NoTypeHints)
 
-    val json =
-        ("schemas" -> schemaSummary) ~ ("nodes" -> nodeTypesAsJson) ~ ("edges" -> edgeTypesAsJson) ~ ("properties" -> propertiesAsJson)
+        val json =
+            ("schemas" -> schemaSummary) ~ ("nodes" -> nodeTypesAsJson) ~ ("edges" -> edgeTypesAsJson) ~ ("properties" -> propertiesAsJson)
 
-    val outFileName = "/tmp/schema.json"
-    better.files
-        .File(outFileName)
-        .write(compact(render(json)))
-    println(s"Schema written to: $outFileName")
+        val outFileName = "/tmp/schema.json"
+        better.files
+            .File(outFileName)
+            .write(compact(render(json)))
+        println(s"Schema written to: $outFileName")
 
     private def schemaName(nodeType: AbstractNodeType): String =
         schemaName(nodeType.schemaInfo)
