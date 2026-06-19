@@ -108,7 +108,7 @@ By default, CPG2 runs passes without triggering stop-the-world garbage collectio
 ### build.sbt
 
 ```scala
-libraryDependencies += "io.appthreat" %% "cpg2" % "2.1.6"
+libraryDependencies += "io.appthreat" %% "cpg2" % "3.0.0"
 ```
 
 ### Implementing a Pass
