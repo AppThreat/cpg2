@@ -86,7 +86,9 @@ object IOUtils:
       *   a Seq with all lines in the given file as Strings
       */
     def readLinesInFile(path: Path): Seq[String] =
-        Using.resource(Source.fromFile(path.toFile)(createDecoder()))(contentFromBufferedSource)
+        Using.resource(Source.fromFile(path.toFile)(using createDecoder()))(
+          contentFromBufferedSource
+        )
 
     /** Reads a file at the given path and:
       *   - skips BOM if present
@@ -99,7 +101,7 @@ object IOUtils:
       *   a String with the given file's contents
       */
     def readEntireFile(path: Path): String =
-        Using.resource(Source.fromFile(path.toFile)(createDecoder()))(
+        Using.resource(Source.fromFile(path.toFile)(using createDecoder()))(
           contentStringFromBufferedSource
         )
 end IOUtils

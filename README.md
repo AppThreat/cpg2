@@ -79,6 +79,15 @@ Unlike the streaming passes, this follows a `fork/join` model. It reads the _ent
 
 ## Performance Tuning
 
+### OverflowDB 3.x Database Optimizations
+
+CPG2 runs on **OverflowDB 3.0.1+** (JDK 23+), which introduces several advanced database-level optimizations to accelerate graph passes:
+
+- **Glossary Pre-initialization:** The graph dynamically extracts and registers schema-defined strings (labels, properties, and edge directions) at startup. This enables lock-free lookups during multi-threaded parsing, preventing H2 MVStore write-contention.
+- **Zero-Allocation Node Property Packing:** Node property serialization bypasses intermediate `HashMap` allocations to eliminate garbage collection pressure during large writes.
+- **Edge Property Fast-Paths:** Omits empty map metadata headers/footers for edge labels with no properties, dramatically reducing disk usage and serialization cycles.
+- **Export Formats Support:** Support for exporting the CPG to standard formats including GraphML, GraphSON, Neo4j CSV, DOT, and GEXF (Graph Exchange XML Format) for visual analysis in tools like Gephi.
+
 ### Virtual Threads
 
 CPG2 leverages JDK Virtual Threads (`Executors.newVirtualThreadPerTaskExecutor`) for IO-bound tasks (like parsing C/C++ files where disk IO or head-lock contention is high). This allows thousands of concurrent parsers without the overhead of OS threads.
@@ -108,7 +117,7 @@ By default, CPG2 runs passes without triggering stop-the-world garbage collectio
 ### build.sbt
 
 ```scala
-libraryDependencies += "io.appthreat" %% "cpg2" % "3.0.0"
+libraryDependencies += "io.appthreat" %% "cpg2" % "3.0.2"
 ```
 
 ### Implementing a Pass

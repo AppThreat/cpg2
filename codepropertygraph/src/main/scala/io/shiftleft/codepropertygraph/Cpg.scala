@@ -33,7 +33,7 @@ object Cpg:
         new Cpg(generated.Cpg.withStorage(path).graph)
 
     def withConfig(config: overflowdb.Config): Cpg =
-        Cpg(generated.Cpg.withConfig(config).graph)
+        Cpg(using generated.Cpg.withConfig(config).graph)
 
     def emptyGraph: Graph =
         generated.Cpg.emptyGraph

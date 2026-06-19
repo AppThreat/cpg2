@@ -8,6 +8,14 @@ generateDomainClasses/classWithSchema := "io.shiftleft.codepropertygraph.schema.
 generateDomainClasses/fieldName       := "instance"
 generateDomainClasses/outputDir       := (Projects.domainClasses / generatedSrcDir).value
 
+Compile / generateDomainClasses := {
+  val originalResult = (Compile / generateDomainClasses).value
+  val r = (Compile / run / runner).value
+  val cp = (Compile / fullClasspath).value.map(_.data)
+  r.run("io.shiftleft.codepropertygraph.schema.Codegen", cp, Seq("domainClasses/src/main/generated", "--only-hash"), streams.value.log).get
+  originalResult
+}
+
 val generateProtobuf = taskKey[File]("generate protobuf definitions: cpg.proto")
 generateProtobuf := Def.taskDyn {
   val outputRoot       = target.value / "protos"
