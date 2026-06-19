@@ -9,7 +9,7 @@ libraryDependencies ++= Seq(
 
 scalacOptions -= "-Xfatal-warnings" // some antl-generated sources prompt compiler warnings :(
 
-compile / javacOptions ++= Seq("-Xlint", "--release=21", "-g")
+compile / javacOptions ++= Seq("-Xlint", "--release=23", "-g")
 Test / fork := true
 testOptions += Tests.Argument(TestFrameworks.JUnit, "-a", "-v")
 

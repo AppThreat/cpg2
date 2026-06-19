@@ -10,7 +10,7 @@ Compile/compile := (Compile/compile).dependsOn(Projects.schema/Compile/generateD
 Compile / scalacOptions ++= Seq(
   "-rewrite",
   "-source",
-  "3.4-migration"
+  "3.7-migration"
 )
 
 /* generated sources occasionally have some warnings..
