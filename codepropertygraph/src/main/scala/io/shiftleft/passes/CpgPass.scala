@@ -64,7 +64,7 @@ abstract class ForkJoinParallelCpgPass[T <: AnyRef](
   cpg: Cpg,
   @nowarn outName: String = "",
   keyPool: Option[KeyPool] = None,
-  maxChunkSize: Int = 1000,
+  maxChunkSize: Int = PassConfig.intProp("odb.forkjoinpass.maxChunkSize", 1000),
   continueOnError: Boolean = false
 ) extends NewStyleCpgPassBase[T]:
 
@@ -110,8 +110,9 @@ end ForkJoinParallelCpgPass
   * Please don't subclass this directly. The only reason it's not sealed is that this would mess
   * with our file hierarchy.
   */
-abstract class NewStyleCpgPassBase[T <: AnyRef](private val maxChunkSize: Int = 1000)
-    extends CpgPassBase:
+abstract class NewStyleCpgPassBase[T <: AnyRef](
+  private val maxChunkSize: Int = PassConfig.intProp("odb.forkjoinpass.maxChunkSize", 1000)
+) extends CpgPassBase:
     type DiffGraphBuilder = overflowdb.BatchedUpdate.DiffGraphBuilder
     def generateParts(): Array[? <: AnyRef]
     def init(): Unit   = {}
@@ -127,13 +128,15 @@ abstract class NewStyleCpgPassBase[T <: AnyRef](private val maxChunkSize: Int = 
             val nParts = parts.length
 
             if nParts > 0 && parts.length > maxChunkSize then
+                val explicitGc = PassConfig.intProp("odb.forkjoinpass.explicitGc", 0) == 1
                 parts.grouped(maxChunkSize).foreach { chunk =>
                     val chunkBuilder = new DiffGraphBuilder
                     chunk.foreach { part =>
                         runOnPart(chunkBuilder, part.asInstanceOf[T])
                     }
                     externalBuilder.absorb(chunkBuilder)
-                    System.gc()
+                    if explicitGc then
+                        System.gc()
                 }
             else
                 nParts match

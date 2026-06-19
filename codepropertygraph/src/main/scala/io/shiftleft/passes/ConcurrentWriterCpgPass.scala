@@ -33,10 +33,17 @@ import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutorServic
  * passes eagerly, and releases them only when the entire chain has run.
  * */
 object ConcurrentWriterCpgPass:
-    private val cores                 = Runtime.getRuntime.availableProcessors()
-    private val writerQueueCapacity   = Math.max(2, (0.75 * cores).toInt)
-    private val producerQueueCapacity = Math.max(4, (1.5 * cores).toInt)
-    private val writerBatchSize       = 4
+    import PassConfig.{cores, intProp}
+
+    /** Tuning knobs, overridable via system properties (see [[PassConfig]]); invalid values fall
+      * back to the core-derived defaults.
+      */
+    private[passes] def writerQueueCapacity: Int =
+        intProp("odb.concurrentwriterpass.writerQueueCapacity", Math.max(2, (0.75 * cores).toInt))
+    private[passes] def producerQueueCapacity: Int =
+        intProp("odb.concurrentwriterpass.producerQueueCapacity", Math.max(4, (1.5 * cores).toInt))
+    private[passes] def writerBatchSize: Int =
+        intProp("odb.concurrentwriterpass.writerBatchSize", 4)
 end ConcurrentWriterCpgPass
 
 abstract class ConcurrentWriterCpgPass[T <: AnyRef](
@@ -71,9 +78,9 @@ abstract class ConcurrentWriterCpgPass[T <: AnyRef](
       inverse: Boolean = false,
       prefix: String = ""
     ): Unit =
-        import ConcurrentWriterCpgPass.producerQueueCapacity
-        var nParts = 0
-        var nDiff  = 0
+        val producerQueueCapacity = ConcurrentWriterCpgPass.producerQueueCapacity
+        var nParts                = 0
+        var nDiff                 = 0
         nDiffT = -1
         init()
         val parts = generateParts()
@@ -118,6 +125,7 @@ abstract class ConcurrentWriterCpgPass[T <: AnyRef](
     end createApplySerializeAndStore
 
     private class Writer extends Runnable:
+        private val batchSize = ConcurrentWriterCpgPass.writerBatchSize
         val queue = new LinkedBlockingQueue[Option[overflowdb.BatchedUpdate.DiffGraph]](
           ConcurrentWriterCpgPass.writerQueueCapacity
         )
@@ -128,7 +136,7 @@ abstract class ConcurrentWriterCpgPass[T <: AnyRef](
             try
                 nDiffT = 0
                 val batchBuffer = new java.util.ArrayList[overflowdb.BatchedUpdate.DiffGraph](
-                  ConcurrentWriterCpgPass.writerBatchSize
+                  batchSize
                 )
                 while true do
                     queue.take() match
@@ -137,7 +145,7 @@ abstract class ConcurrentWriterCpgPass[T <: AnyRef](
                             return
                         case Some(diffGraph) =>
                             batchBuffer.add(diffGraph)
-                            if batchBuffer.size() >= ConcurrentWriterCpgPass.writerBatchSize then
+                            if batchBuffer.size() >= batchSize then
                                 flushBatch(batchBuffer)
             catch
                 case exception: InterruptedException => Thread.currentThread().interrupt()

@@ -8,10 +8,24 @@ import scala.annotation.nowarn
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService, Future}
 
 object StreamingCpgPass:
-    private val cores                 = Runtime.getRuntime.availableProcessors()
-    private val writerQueueCapacity   = Math.max(2, (0.5 * cores).toInt)
-    private val producerQueueCapacity = Math.max(4, (0.7 * cores).toInt)
-    private val writerBatchSize       = 4
+    import PassConfig.{cores, intProp}
+
+    /** Tuning knobs, overridable via system properties so that large-graph runs can be tuned
+      * without recompiling. Any unset, non-numeric or non-positive value falls back to the default.
+      *   - `odb.streamingpass.writerQueueCapacity`: bounded handoff queue between producers and the
+      *     single writer thread.
+      *   - `odb.streamingpass.producerQueueCapacity`: max number of in-flight producer tasks
+      *     (backpressure).
+      *   - `odb.streamingpass.writerBatchSize`: how many DiffGraphs the writer accumulates before
+      *     applying them, amortising writer wake-ups on large graphs.
+      */
+    private[passes] def writerQueueCapacity: Int =
+        intProp("odb.streamingpass.writerQueueCapacity", Math.max(2, (0.5 * cores).toInt))
+    private[passes] def producerQueueCapacity: Int =
+        intProp("odb.streamingpass.producerQueueCapacity", Math.max(4, (0.7 * cores).toInt))
+    private[passes] def writerBatchSize: Int =
+        intProp("odb.streamingpass.writerBatchSize", 32)
+end StreamingCpgPass
 
 /** A replacement for ConcurrentWriterCpgPass that trades deterministic Node IDs for significantly
   * lower memory usage.
@@ -44,7 +58,7 @@ abstract class StreamingCpgPass[T <: AnyRef](
       inverse: Boolean = false,
       prefix: String = ""
     ): Unit =
-        import StreamingCpgPass.producerQueueCapacity
+        val producerQueueCapacity = StreamingCpgPass.producerQueueCapacity
 
         nDiffT = -1
         init()
@@ -107,6 +121,7 @@ abstract class StreamingCpgPass[T <: AnyRef](
     end createApplySerializeAndStore
 
     private class Writer extends Runnable:
+        private val batchSize = StreamingCpgPass.writerBatchSize
         val queue = new LinkedBlockingQueue[Option[overflowdb.BatchedUpdate.DiffGraph]](
           StreamingCpgPass.writerQueueCapacity
         )
@@ -117,7 +132,7 @@ abstract class StreamingCpgPass[T <: AnyRef](
             try
                 nDiffT = 0
                 val batchBuffer = new java.util.ArrayList[overflowdb.BatchedUpdate.DiffGraph](
-                  StreamingCpgPass.writerBatchSize
+                  batchSize
                 )
                 while true do
                     if raisedException.isDefined then return
@@ -128,7 +143,7 @@ abstract class StreamingCpgPass[T <: AnyRef](
                             return
                         case Some(diffGraph) =>
                             batchBuffer.add(diffGraph)
-                            if batchBuffer.size() >= StreamingCpgPass.writerBatchSize then
+                            if batchBuffer.size() >= batchSize then
                                 flushBatch(batchBuffer)
             catch
                 case exception: InterruptedException => Thread.currentThread().interrupt()

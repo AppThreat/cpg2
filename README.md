@@ -81,7 +81,7 @@ Unlike the streaming passes, this follows a `fork/join` model. It reads the _ent
 
 ### Virtual Threads
 
-CPG2 leverages JDK 21+ Virtual Threads (`Executors.newVirtualThreadPerTaskExecutor`) for IO-bound tasks (like parsing C/C++ files where disk IO or head-lock contention is high). This allows thousands of concurrent parsers without the overhead of OS threads.
+CPG2 leverages JDK Virtual Threads (`Executors.newVirtualThreadPerTaskExecutor`) for IO-bound tasks (like parsing C/C++ files where disk IO or head-lock contention is high). This allows thousands of concurrent parsers without the overhead of OS threads.
 
 ### Backpressure & Memory Safety
 
@@ -96,6 +96,10 @@ For passes that need to allocate IDs (e.g., creating new nodes), pass a `KeyPool
 
 - **IntervalKeyPool:** Allocates a range of IDs (e.g., 1000-2000). Efficient and thread-safe.
 - **SequenceKeyPool:** Allocates specific IDs from a list.
+
+### Garbage Collection during Passes
+
+By default, CPG2 runs passes without triggering stop-the-world garbage collection pauses between chunk processing loops. This maximizes throughput. If you run into severe memory constraints during large batch runs and want to force explicit garbage collection pauses after each chunk, set the JVM system property `odb.forkjoinpass.explicitGc=1`.
 
 ---
 
@@ -138,6 +142,108 @@ CPG2 supports the Overlay protocol (`SerializedCpg`).
 
 - Passes can modify the in-memory graph.
 - Passes can _also_ produce ProtoBuf overlays (stored as zip entries) for downstream tools (like Joern) to consume without re-running the analysis.
+
+## Advanced Traversal Algorithms
+
+CPG2 exposes the traversal algorithms from the underlying graph store as clean, idiomatic extension methods on graph nodes and collections inside the `io.shiftleft.codepropertygraph.CpgAlgorithms` package.
+
+### Exposing Extensions
+
+To use these extension methods, import `io.shiftleft.codepropertygraph.CpgAlgorithms.*` in your code.
+
+### Dominators and Post-Dominators
+
+```scala
+// Computes immediate dominators in the CFG
+val idoms = entryNode.dominatorTree(node => node.out("CFG"))
+
+// Computes post-dominators starting from exit
+val postIdoms = exitNode.postDominatorTree(node => node.in("CFG"))
+```
+
+### Strongly Connected Components
+
+```scala
+// Finds loops and call cycles inside the induced node subgraph
+val sccs = allNodes.stronglyConnectedComponents(node => node.out("AST"))
+```
+
+### Context-Sensitive Paths
+
+```scala
+// Computes data-flow paths matching call/return contexts (OPEN/CLOSE tags)
+val path = sourceNode.contextSensitivePathTo(targetNode, getContextEdges, maxStackDepth = 10)
+```
+
+### Subgraph Tensor Export
+
+```scala
+// Extracts subgraph structures into flat primitive arrays for GNN consumption
+val gnnTensors = subgraphNodes.exportToGnn
+```
+
+### DSL Traversal Methods
+
+CPG2 also inherits and supports the optimized traversal DSL methods:
+
+#### 1. Navigation Steps
+
+- `.out` or `.out(labels)`: Follow outgoing edges to adjacent nodes.
+- `.in` or `.in(labels)`: Follow incoming edges to adjacent nodes.
+- `.both` or `.both(labels)`: Follow both incoming and outgoing edges to adjacent nodes.
+- `.outE` or `.outE(labels)`: Follow outgoing edges.
+- `.inE` or `.inE(labels)`: Follow incoming edges.
+- `.bothE` or `.bothE(labels)`: Follow both incoming and outgoing edges.
+
+#### 2. Filtering Steps
+
+- `.hasOut(label)`: A zero-allocation filter step that keeps nodes containing at least one outgoing edge with the specified label, resolved directly in the storage engine without iterator allocations.
+- `.hasIn(label)`: A zero-allocation filter step that keeps nodes containing at least one incoming edge with the specified label.
+- `.hasId(values)` or `.id(values)`: Keep nodes with the specified IDs.
+- `.hasLabel(labels)` or `.label(labels)`: Keep nodes with the specified labels.
+- `.labelNot(labels)`: Discard nodes matching the specified labels.
+- `.has(key)` or `.hasNot(key)`: Filter elements by existence or non-existence of a property.
+- `.has(key, value)` or `.hasNot(key, value)`: Filter elements by property values.
+- `.has(propertyPredicate)`: Filter elements using standard predicates like `P.eq`, `P.neq`, `P.within`.
+- `.is(value)`: Keep elements that are equal to the specified value.
+- `.within(set)` or `.without(set)`: Keep or discard elements present in the specified set.
+
+#### 3. Conditional and Routing Steps
+
+- `.choose(on)(options)`: A routing step that enables conditional paths inside a single fluent traversal expression.
+- `.where(subWalk)` or `.whereNot(subWalk)`: Look-ahead filter steps that preserve or discard the active elements depending on whether the sub-walk returns results.
+- `.coalesce(options)`: Evaluates traversals in order and returns the first one that emits elements.
+
+#### 4. Transformation and Aggregation Steps
+
+- `.map(fun)`: Transform each element.
+- `.flatMap(fun)`: Transform and flatten elements.
+- `.collectAll[B]`: Filter and collect elements matching the specified class.
+- `.cast[B]`: Cast all elements to the specified type.
+- `.dedup` or `.dedupBy(fun)`: Remove duplicate elements.
+- `.sorted` or `.sortBy(fun)`: Sort elements.
+- `.groupCount` or `.groupCount(fun)`: Group elements and count occurrences.
+- `.groupBy(fun)` or `.groupMap(key)(fun)`: Group elements by a key or transform values.
+- `.union(travs)`: Aggregate multiple traversal branches into one.
+
+#### 5. Path and Graph Walk Steps
+
+- `.repeat(walk)(config)`: Recursively repeat the walk. Supported modulators include `.maxDepth`, `.until`, `.emit`, `.whilst`, `.breadthFirstSearch`.
+- `.path`: Resolves the visited path tracking for each element in the traversal.
+- `.neighborhood(maxDepth, direction)`: Returns all nodes reachable within the given maximum depth in the specified direction using cycle-safe breadth-first search.
+
+#### 6. Side Effect and Diagnostic Steps
+
+- `.sideEffect(fun)` or `.sideEffectPF(pf)`: Execute a side effect on each element without altering the traversal.
+- `.profile(name)`: Monitors execution time and count metrics for elements passing through the step, logging console statistics upon completion.
+
+#### 7. Materialization Steps
+
+- `.l` or `.toList`: Execute the traversal and return a List.
+- `.iterate()`: Execute the traversal strictly for side effects without returning anything.
+- `.countTrav` or `.size`: Resolve the total number of elements.
+- `.head` or `.headOption`: Return the first element.
+- `.last` or `.lastOption`: Return the last element.
 
 ## License
 
