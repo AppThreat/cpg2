@@ -6718,8 +6718,8 @@ class NewBinding
     override def properties: Map[String, Any] =
         var res = Map[String, Any]()
         if !(("<empty>") == methodFullName) then res += "METHOD_FULL_NAME" -> methodFullName
-        if !(("<empty>") == name) then res += "NAME" -> name
-        if !(("") == signature) then res += "SIGNATURE" -> signature
+        if !(("<empty>") == name) then res += "NAME"                       -> name
+        if !(("") == signature) then res += "SIGNATURE"                    -> signature
         res
 
     import NewBinding.{outNeighbors, inNeighbors}
@@ -8070,7 +8070,7 @@ class NewBlock
         lineNumber.map { value => res += "LINE_NUMBER" -> value }
         if !((-1: Int) == order) then res += "ORDER" -> order
         if possibleTypes != null && possibleTypes.nonEmpty then
-            res += "POSSIBLE_TYPES" -> possibleTypes
+            res += "POSSIBLE_TYPES"                                    -> possibleTypes
         if !(("<empty>") == typeFullName) then res += "TYPE_FULL_NAME" -> typeFullName
         res
 
@@ -9458,11 +9458,11 @@ class NewCall
             res += "DYNAMIC_TYPE_HINT_FULL_NAME" -> dynamicTypeHintFullName
         lineNumber.map { value => res += "LINE_NUMBER" -> value }
         if !(("<empty>") == methodFullName) then res += "METHOD_FULL_NAME" -> methodFullName
-        if !(("<empty>") == name) then res += "NAME" -> name
-        if !((-1: Int) == order) then res += "ORDER" -> order
+        if !(("<empty>") == name) then res += "NAME"                       -> name
+        if !((-1: Int) == order) then res += "ORDER"                       -> order
         if possibleTypes != null && possibleTypes.nonEmpty then
-            res += "POSSIBLE_TYPES" -> possibleTypes
-        if !(("") == signature) then res += "SIGNATURE" -> signature
+            res += "POSSIBLE_TYPES"                                    -> possibleTypes
+        if !(("") == signature) then res += "SIGNATURE"                -> signature
         if !(("<empty>") == typeFullName) then res += "TYPE_FULL_NAME" -> typeFullName
         res
 
@@ -10947,7 +10947,7 @@ class NewConfigFile
     override def properties: Map[String, Any] =
         var res = Map[String, Any]()
         if !(("<empty>") == content) then res += "CONTENT" -> content
-        if !(("<empty>") == name) then res += "NAME" -> name
+        if !(("<empty>") == name) then res += "NAME"       -> name
         res
 
     import NewConfigFile.{outNeighbors, inNeighbors}
@@ -12288,7 +12288,7 @@ class NewControlStructure
         if !(("<empty>") == controlStructureType) then
             res += "CONTROL_STRUCTURE_TYPE" -> controlStructureType
         lineNumber.map { value => res += "LINE_NUMBER" -> value }
-        if !((-1: Int) == order) then res += "ORDER" -> order
+        if !((-1: Int) == order) then res += "ORDER"                       -> order
         if !(("<empty>") == parserTypeName) then res += "PARSER_TYPE_NAME" -> parserTypeName
         res
 
@@ -12371,7 +12371,7 @@ class NewDependency
     override def properties: Map[String, Any] =
         var res = Map[String, Any]()
         dependencyGroupId.map { value => res += "DEPENDENCY_GROUP_ID" -> value }
-        if !(("<empty>") == name) then res += "NAME" -> name
+        if !(("<empty>") == name) then res += "NAME"       -> name
         if !(("<empty>") == version) then res += "VERSION" -> version
         res
 
@@ -13705,7 +13705,7 @@ class NewFieldIdentifier
         if !((-1: Int) == argumentIndex) then res += "ARGUMENT_INDEX" -> argumentIndex
         argumentName.map { value => res += "ARGUMENT_NAME" -> value }
         if !(("<empty>") == canonicalName) then res += "CANONICAL_NAME" -> canonicalName
-        if !(("<empty>") == code) then res += "CODE" -> code
+        if !(("<empty>") == code) then res += "CODE"                    -> code
         columnNumber.map { value => res += "COLUMN_NUMBER" -> value }
         lineNumber.map { value => res += "LINE_NUMBER" -> value }
         if !((-1: Int) == order) then res += "ORDER" -> order
@@ -16472,7 +16472,7 @@ class NewIdentifier
         if !(("<empty>") == name) then res += "NAME" -> name
         if !((-1: Int) == order) then res += "ORDER" -> order
         if possibleTypes != null && possibleTypes.nonEmpty then
-            res += "POSSIBLE_TYPES" -> possibleTypes
+            res += "POSSIBLE_TYPES"                                    -> possibleTypes
         if !(("<empty>") == typeFullName) then res += "TYPE_FULL_NAME" -> typeFullName
         res
 
@@ -19182,8 +19182,8 @@ class NewJumpLabel
         if !(("<empty>") == code) then res += "CODE" -> code
         columnNumber.map { value => res += "COLUMN_NUMBER" -> value }
         lineNumber.map { value => res += "LINE_NUMBER" -> value }
-        if !(("<empty>") == name) then res += "NAME" -> name
-        if !((-1: Int) == order) then res += "ORDER" -> order
+        if !(("<empty>") == name) then res += "NAME"                       -> name
+        if !((-1: Int) == order) then res += "ORDER"                       -> order
         if !(("<empty>") == parserTypeName) then res += "PARSER_TYPE_NAME" -> parserTypeName
         res
 
@@ -20519,11 +20519,11 @@ class NewJumpTarget
     override def properties: Map[String, Any] =
         var res = Map[String, Any]()
         if !((-1: Int) == argumentIndex) then res += "ARGUMENT_INDEX" -> argumentIndex
-        if !(("<empty>") == code) then res += "CODE" -> code
+        if !(("<empty>") == code) then res += "CODE"                  -> code
         columnNumber.map { value => res += "COLUMN_NUMBER" -> value }
         lineNumber.map { value => res += "LINE_NUMBER" -> value }
-        if !(("<empty>") == name) then res += "NAME" -> name
-        if !((-1: Int) == order) then res += "ORDER" -> order
+        if !(("<empty>") == name) then res += "NAME"                       -> name
+        if !((-1: Int) == order) then res += "ORDER"                       -> order
         if !(("<empty>") == parserTypeName) then res += "PARSER_TYPE_NAME" -> parserTypeName
         res
 
@@ -20595,7 +20595,7 @@ class NewKeyValuePair
     override def properties: Map[String, Any] =
         var res = Map[String, Any]()
         if !(("<empty>") == key) then res += "KEY" -> key
-        if !(("") == value) then res += "VALUE" -> value
+        if !(("") == value) then res += "VALUE"    -> value
         res
 
     import NewKeyValuePair.{outNeighbors, inNeighbors}
@@ -21944,7 +21944,7 @@ class NewLiteral
         lineNumber.map { value => res += "LINE_NUMBER" -> value }
         if !((-1: Int) == order) then res += "ORDER" -> order
         if possibleTypes != null && possibleTypes.nonEmpty then
-            res += "POSSIBLE_TYPES" -> possibleTypes
+            res += "POSSIBLE_TYPES"                                    -> possibleTypes
         if !(("<empty>") == typeFullName) then res += "TYPE_FULL_NAME" -> typeFullName
         res
 
@@ -23308,7 +23308,7 @@ class NewLocal
         if !(("<empty>") == name) then res += "NAME" -> name
         if !((-1: Int) == order) then res += "ORDER" -> order
         if possibleTypes != null && possibleTypes.nonEmpty then
-            res += "POSSIBLE_TYPES" -> possibleTypes
+            res += "POSSIBLE_TYPES"                                    -> possibleTypes
         if !(("<empty>") == typeFullName) then res += "TYPE_FULL_NAME" -> typeFullName
         res
 
@@ -23435,15 +23435,15 @@ class NewLocation
 
     override def properties: Map[String, Any] =
         var res = Map[String, Any]()
-        if !(("<empty>") == className) then res += "CLASS_NAME" -> className
+        if !(("<empty>") == className) then res += "CLASS_NAME"            -> className
         if !(("<empty>") == classShortName) then res += "CLASS_SHORT_NAME" -> classShortName
-        if !(("<empty>") == filename) then res += "FILENAME" -> filename
+        if !(("<empty>") == filename) then res += "FILENAME"               -> filename
         lineNumber.map { value => res += "LINE_NUMBER" -> value }
-        if !(("<empty>") == methodFullName) then res += "METHOD_FULL_NAME" -> methodFullName
+        if !(("<empty>") == methodFullName) then res += "METHOD_FULL_NAME"   -> methodFullName
         if !(("<empty>") == methodShortName) then res += "METHOD_SHORT_NAME" -> methodShortName
-        if !(("<empty>") == nodeLabel) then res += "NODE_LABEL" -> nodeLabel
-        if !(("<empty>") == packageName) then res += "PACKAGE_NAME" -> packageName
-        if !(("<empty>") == symbol) then res += "SYMBOL" -> symbol
+        if !(("<empty>") == nodeLabel) then res += "NODE_LABEL"              -> nodeLabel
+        if !(("<empty>") == packageName) then res += "PACKAGE_NAME"          -> packageName
+        if !(("<empty>") == symbol) then res += "SYMBOL"                     -> symbol
         node.map { value => res += "node" -> value }
         res
 
@@ -24800,7 +24800,7 @@ class NewMember
         if !(("<empty>") == name) then res += "NAME" -> name
         if !((-1: Int) == order) then res += "ORDER" -> order
         if possibleTypes != null && possibleTypes.nonEmpty then
-            res += "POSSIBLE_TYPES" -> possibleTypes
+            res += "POSSIBLE_TYPES"                                    -> possibleTypes
         if !(("<empty>") == typeFullName) then res += "TYPE_FULL_NAME" -> typeFullName
         res
 
@@ -24894,10 +24894,10 @@ class NewMetaData
     override def properties: Map[String, Any] =
         var res = Map[String, Any]()
         hash.map { value => res += "HASH" -> value }
-        if !(("<empty>") == language) then res += "LANGUAGE" -> language
+        if !(("<empty>") == language) then res += "LANGUAGE"            -> language
         if overlays != null && overlays.nonEmpty then res += "OVERLAYS" -> overlays
-        if !(("<empty>") == root) then res += "ROOT" -> root
-        if !(("<empty>") == version) then res += "VERSION" -> version
+        if !(("<empty>") == root) then res += "ROOT"                    -> root
+        if !(("<empty>") == version) then res += "VERSION"              -> version
         res
 
     import NewMetaData.{outNeighbors, inNeighbors}
@@ -26278,19 +26278,19 @@ class NewMethod
     override def properties: Map[String, Any] =
         var res = Map[String, Any]()
         if !(("<empty>") == astParentFullName) then
-            res += "AST_PARENT_FULL_NAME" -> astParentFullName
+            res += "AST_PARENT_FULL_NAME"                                -> astParentFullName
         if !(("<empty>") == astParentType) then res += "AST_PARENT_TYPE" -> astParentType
-        if !(("<empty>") == code) then res += "CODE" -> code
+        if !(("<empty>") == code) then res += "CODE"                     -> code
         columnNumber.map { value => res += "COLUMN_NUMBER" -> value }
         columnNumberEnd.map { value => res += "COLUMN_NUMBER_END" -> value }
-        if !(("<empty>") == filename) then res += "FILENAME" -> filename
+        if !(("<empty>") == filename) then res += "FILENAME"  -> filename
         if !(("<empty>") == fullName) then res += "FULL_NAME" -> fullName
         hash.map { value => res += "HASH" -> value }
         if !((false) == isExternal) then res += "IS_EXTERNAL" -> isExternal
         lineNumber.map { value => res += "LINE_NUMBER" -> value }
         lineNumberEnd.map { value => res += "LINE_NUMBER_END" -> value }
-        if !(("<empty>") == name) then res += "NAME" -> name
-        if !((-1: Int) == order) then res += "ORDER" -> order
+        if !(("<empty>") == name) then res += "NAME"    -> name
+        if !((-1: Int) == order) then res += "ORDER"    -> order
         if !(("") == signature) then res += "SIGNATURE" -> signature
         res
 
@@ -27670,14 +27670,14 @@ class NewMethodParameterIn
         if dynamicTypeHintFullName != null && dynamicTypeHintFullName.nonEmpty then
             res += "DYNAMIC_TYPE_HINT_FULL_NAME" -> dynamicTypeHintFullName
         if !(("<empty>") == evaluationStrategy) then
-            res += "EVALUATION_STRATEGY" -> evaluationStrategy
-        if !((-1: Int) == index) then res += "INDEX" -> index
+            res += "EVALUATION_STRATEGY"                      -> evaluationStrategy
+        if !((-1: Int) == index) then res += "INDEX"          -> index
         if !((false) == isVariadic) then res += "IS_VARIADIC" -> isVariadic
         lineNumber.map { value => res += "LINE_NUMBER" -> value }
         if !(("<empty>") == name) then res += "NAME" -> name
         if !((-1: Int) == order) then res += "ORDER" -> order
         if possibleTypes != null && possibleTypes.nonEmpty then
-            res += "POSSIBLE_TYPES" -> possibleTypes
+            res += "POSSIBLE_TYPES"                                    -> possibleTypes
         if !(("<empty>") == typeFullName) then res += "TYPE_FULL_NAME" -> typeFullName
         res
 
@@ -29038,12 +29038,12 @@ class NewMethodParameterOut
         if !(("<empty>") == code) then res += "CODE" -> code
         columnNumber.map { value => res += "COLUMN_NUMBER" -> value }
         if !(("<empty>") == evaluationStrategy) then
-            res += "EVALUATION_STRATEGY" -> evaluationStrategy
-        if !((-1: Int) == index) then res += "INDEX" -> index
+            res += "EVALUATION_STRATEGY"                      -> evaluationStrategy
+        if !((-1: Int) == index) then res += "INDEX"          -> index
         if !((false) == isVariadic) then res += "IS_VARIADIC" -> isVariadic
         lineNumber.map { value => res += "LINE_NUMBER" -> value }
-        if !(("<empty>") == name) then res += "NAME" -> name
-        if !((-1: Int) == order) then res += "ORDER" -> order
+        if !(("<empty>") == name) then res += "NAME"                   -> name
+        if !((-1: Int) == order) then res += "ORDER"                   -> order
         if !(("<empty>") == typeFullName) then res += "TYPE_FULL_NAME" -> typeFullName
         res
 
@@ -30413,9 +30413,9 @@ class NewMethodRef
             res += "DYNAMIC_TYPE_HINT_FULL_NAME" -> dynamicTypeHintFullName
         lineNumber.map { value => res += "LINE_NUMBER" -> value }
         if !(("<empty>") == methodFullName) then res += "METHOD_FULL_NAME" -> methodFullName
-        if !((-1: Int) == order) then res += "ORDER" -> order
+        if !((-1: Int) == order) then res += "ORDER"                       -> order
         if possibleTypes != null && possibleTypes.nonEmpty then
-            res += "POSSIBLE_TYPES" -> possibleTypes
+            res += "POSSIBLE_TYPES"                                    -> possibleTypes
         if !(("<empty>") == typeFullName) then res += "TYPE_FULL_NAME" -> typeFullName
         res
 
@@ -31773,7 +31773,7 @@ class NewMethodReturn
         lineNumber.map { value => res += "LINE_NUMBER" -> value }
         if !((-1: Int) == order) then res += "ORDER" -> order
         if possibleTypes != null && possibleTypes.nonEmpty then
-            res += "POSSIBLE_TYPES" -> possibleTypes
+            res += "POSSIBLE_TYPES"                                    -> possibleTypes
         if !(("<empty>") == typeFullName) then res += "TYPE_FULL_NAME" -> typeFullName
         res
 
@@ -33104,7 +33104,7 @@ class NewModifier
         columnNumber.map { value => res += "COLUMN_NUMBER" -> value }
         lineNumber.map { value => res += "LINE_NUMBER" -> value }
         if !(("<empty>") == modifierType) then res += "MODIFIER_TYPE" -> modifierType
-        if !((-1: Int) == order) then res += "ORDER" -> order
+        if !((-1: Int) == order) then res += "ORDER"                  -> order
         res
 
     import NewModifier.{outNeighbors, inNeighbors}
@@ -35762,7 +35762,7 @@ class NewNamespaceBlock
         var res = Map[String, Any]()
         if !(("<empty>") == code) then res += "CODE" -> code
         columnNumber.map { value => res += "COLUMN_NUMBER" -> value }
-        if !(("<empty>") == filename) then res += "FILENAME" -> filename
+        if !(("<empty>") == filename) then res += "FILENAME"  -> filename
         if !(("<empty>") == fullName) then res += "FULL_NAME" -> fullName
         lineNumber.map { value => res += "LINE_NUMBER" -> value }
         if !(("<empty>") == name) then res += "NAME" -> name
@@ -37195,7 +37195,7 @@ class NewTag
     override def properties: Map[String, Any] =
         var res = Map[String, Any]()
         if !(("<empty>") == name) then res += "NAME" -> name
-        if !(("") == value) then res += "VALUE" -> value
+        if !(("") == value) then res += "VALUE"      -> value
         res
 
     import NewTag.{outNeighbors, inNeighbors}
@@ -37256,7 +37256,7 @@ class NewTagNodePair
     override def properties: Map[String, Any] =
         var res = Map[String, Any]()
         if !((null) == node) then res += "node" -> node
-        if !((null) == tag) then res += "tag" -> tag
+        if !((null) == tag) then res += "tag"   -> tag
         res
 
     import NewTagNodePair.{outNeighbors, inNeighbors}
@@ -38688,8 +38688,8 @@ class NewType
 
     override def properties: Map[String, Any] =
         var res = Map[String, Any]()
-        if !(("<empty>") == fullName) then res += "FULL_NAME" -> fullName
-        if !(("<empty>") == name) then res += "NAME" -> name
+        if !(("<empty>") == fullName) then res += "FULL_NAME"                   -> fullName
+        if !(("<empty>") == name) then res += "NAME"                            -> name
         if !(("<empty>") == typeDeclFullName) then res += "TYPE_DECL_FULL_NAME" -> typeDeclFullName
         res
 
@@ -41367,14 +41367,14 @@ class NewTypeDecl
         var res = Map[String, Any]()
         aliasTypeFullName.map { value => res += "ALIAS_TYPE_FULL_NAME" -> value }
         if !(("<empty>") == astParentFullName) then
-            res += "AST_PARENT_FULL_NAME" -> astParentFullName
+            res += "AST_PARENT_FULL_NAME"                                -> astParentFullName
         if !(("<empty>") == astParentType) then res += "AST_PARENT_TYPE" -> astParentType
-        if !(("<empty>") == code) then res += "CODE" -> code
+        if !(("<empty>") == code) then res += "CODE"                     -> code
         columnNumber.map { value => res += "COLUMN_NUMBER" -> value }
-        if !(("<empty>") == filename) then res += "FILENAME" -> filename
+        if !(("<empty>") == filename) then res += "FILENAME"  -> filename
         if !(("<empty>") == fullName) then res += "FULL_NAME" -> fullName
         if inheritsFromTypeFullName != null && inheritsFromTypeFullName.nonEmpty then
-            res += "INHERITS_FROM_TYPE_FULL_NAME" -> inheritsFromTypeFullName
+            res += "INHERITS_FROM_TYPE_FULL_NAME"             -> inheritsFromTypeFullName
         if !((false) == isExternal) then res += "IS_EXTERNAL" -> isExternal
         lineNumber.map { value => res += "LINE_NUMBER" -> value }
         if !(("<empty>") == name) then res += "NAME" -> name
@@ -44071,7 +44071,7 @@ class NewTypeRef
         lineNumber.map { value => res += "LINE_NUMBER" -> value }
         if !((-1: Int) == order) then res += "ORDER" -> order
         if possibleTypes != null && possibleTypes.nonEmpty then
-            res += "POSSIBLE_TYPES" -> possibleTypes
+            res += "POSSIBLE_TYPES"                                    -> possibleTypes
         if !(("<empty>") == typeFullName) then res += "TYPE_FULL_NAME" -> typeFullName
         res
 
@@ -45446,10 +45446,10 @@ class NewUnknown
         if dynamicTypeHintFullName != null && dynamicTypeHintFullName.nonEmpty then
             res += "DYNAMIC_TYPE_HINT_FULL_NAME" -> dynamicTypeHintFullName
         lineNumber.map { value => res += "LINE_NUMBER" -> value }
-        if !((-1: Int) == order) then res += "ORDER" -> order
+        if !((-1: Int) == order) then res += "ORDER"                       -> order
         if !(("<empty>") == parserTypeName) then res += "PARSER_TYPE_NAME" -> parserTypeName
         if possibleTypes != null && possibleTypes.nonEmpty then
-            res += "POSSIBLE_TYPES" -> possibleTypes
+            res += "POSSIBLE_TYPES"                                    -> possibleTypes
         if !(("<empty>") == typeFullName) then res += "TYPE_FULL_NAME" -> typeFullName
         res
 

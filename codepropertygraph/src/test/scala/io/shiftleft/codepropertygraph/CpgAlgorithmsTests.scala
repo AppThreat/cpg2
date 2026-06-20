@@ -94,6 +94,30 @@ class CpgAlgorithmsTests extends AnyWordSpec with Matchers {
       graph.close()
     }
 
+    "rank nodes by PageRank and in-degree centrality" in {
+      val graph = OverflowDbTestInstance.create
+      val hub = graph.addNode("METHOD")
+      val a = graph.addNode("METHOD")
+      val b = graph.addNode("METHOD")
+      val c = graph.addNode("METHOD")
+
+      a.addEdge("AST", hub)
+      b.addEdge("AST", hub)
+      c.addEdge("AST", hub)
+
+      val nodes = Seq(hub, a, b, c)
+
+      val degrees = nodes.inDegreeCentrality(n => n.out("AST").asScala)
+      degrees(hub.id()) shouldBe 3
+      degrees(a.id()) shouldBe 0
+
+      val ranks = nodes.pageRank(n => n.out("AST").asScala)
+      ranks.values.sum shouldBe (1.0 +- 1e-6)
+      ranks(hub.id()) should be > ranks(a.id())
+
+      graph.close()
+    }
+
     "support new traversal methods (hasOut, hasIn, neighborhood, profile)" in {
       val graph = OverflowDbTestInstance.create
       val a = graph.addNode("METHOD")

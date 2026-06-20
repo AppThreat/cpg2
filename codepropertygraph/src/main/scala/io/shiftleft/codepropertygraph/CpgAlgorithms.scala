@@ -10,6 +10,7 @@ import overflowdb.algorithm.{
     GnnExporter,
     HeapWalker,
     LowestCommonAncestors,
+    PageRank,
     PathFinder,
     StronglyConnectedComponents,
     TopologicalSort
@@ -120,5 +121,31 @@ object CpgAlgorithms:
         def dependencySequence(getParentsFunc: Node => Set[Node]): Seq[Set[Node]] =
             implicit val gp: GetParents[Node] = (node: Node) => getParentsFunc(node)
             DependencySequencer(nodes.iterator.toSet)
+
+        /** Counts, for every node, how many edges from this set point at it. Useful as a quick "how
+          * heavily referenced is this" ranking, for example over a call graph.
+          * @param getSuccessors
+          *   Successor function.
+          */
+        def inDegreeCentrality(getSuccessors: Node => Iterator[Node]): Map[Long, Int] =
+            val jFunc: java.util.function.Function[Node, java.util.Iterator[Node]] =
+                (n: Node) => getSuccessors(n).asJava
+            val jNodes = nodes.iterator.toSeq.asJava
+            PageRank.inDegree(jNodes, jFunc).asScala.map { case (k, v) =>
+                k.longValue() -> v.intValue()
+            }.toMap
+
+        /** Ranks these nodes with PageRank over the subgraph they induce. A node referenced by
+          * highly ranked nodes is itself ranked highly. Scores sum to roughly 1.0.
+          * @param getSuccessors
+          *   Successor function.
+          */
+        def pageRank(getSuccessors: Node => Iterator[Node]): Map[Long, Double] =
+            val jFunc: java.util.function.Function[Node, java.util.Iterator[Node]] =
+                (n: Node) => getSuccessors(n).asJava
+            val jNodes = nodes.iterator.toSeq.asJava
+            PageRank.compute(jNodes, jFunc).asScala.map { case (k, v) =>
+                k.longValue() -> v.doubleValue()
+            }.toMap
     end CpgNodeCollectionOps
 end CpgAlgorithms

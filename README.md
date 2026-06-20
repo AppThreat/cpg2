@@ -86,7 +86,7 @@ CPG2 runs on **OverflowDB 3.0.1+** (JDK 23+), which introduces several advanced 
 - **Glossary Pre-initialization:** The graph dynamically extracts and registers schema-defined strings (labels, properties, and edge directions) at startup. This enables lock-free lookups during multi-threaded parsing, preventing H2 MVStore write-contention.
 - **Zero-Allocation Node Property Packing:** Node property serialization bypasses intermediate `HashMap` allocations to eliminate garbage collection pressure during large writes.
 - **Edge Property Fast-Paths:** Omits empty map metadata headers/footers for edge labels with no properties, dramatically reducing disk usage and serialization cycles.
-- **Export Formats Support:** Support for exporting the CPG to standard formats including GraphML, GraphSON, Neo4j CSV, DOT, and GEXF (Graph Exchange XML Format) for visual analysis in tools like Gephi.
+- **Export Formats Support:** Support for exporting the CPG to standard formats including GraphML, GraphSON, Neo4j CSV, DOT, GEXF (Graph Exchange XML Format), and GNN (Graph Neural Network JSON) for visual analysis in tools like Gephi.
 
 ### Virtual Threads
 
@@ -189,6 +189,16 @@ val path = sourceNode.contextSensitivePathTo(targetNode, getContextEdges, maxSta
 ```scala
 // Extracts subgraph structures into flat primitive arrays for GNN consumption
 val gnnTensors = subgraphNodes.exportToGnn
+```
+
+### PageRank and In-Degree Centrality
+
+```scala
+// Computes PageRank scores over the subgraph induced by the given nodes
+val ranks = subgraphNodes.pageRank(node => node.out("CALL"))
+
+// Counts incoming edges from the given nodes pointing to each node
+val degrees = subgraphNodes.inDegreeCentrality(node => node.out("CALL"))
 ```
 
 ### DSL Traversal Methods
