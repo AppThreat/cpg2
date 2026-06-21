@@ -158,9 +158,10 @@ abstract class ConcurrentWriterCpgPass[T <: AnyRef](
           : Unit =
             if batch.size() > 0 then
                 batch.forEach { diffGraph =>
-                    nDiffT += overflowdb.BatchedUpdate
+                    val applied = overflowdb.BatchedUpdate
                         .applyDiff(cpg.graph, diffGraph, keyPool.orNull, null)
                         .transitiveModifications()
+                    nDiffT += applied
                 }
                 batch.clear()
     end Writer

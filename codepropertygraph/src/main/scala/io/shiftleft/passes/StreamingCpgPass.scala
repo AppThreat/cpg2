@@ -159,9 +159,10 @@ abstract class StreamingCpgPass[T <: AnyRef](
             if batch.size() > 0 then
                 try
                     batch.forEach { diffGraph =>
-                        nDiffT += overflowdb.BatchedUpdate
+                        val applied = overflowdb.BatchedUpdate
                             .applyDiff(cpg.graph, diffGraph, keyPool.orNull, null)
                             .transitiveModifications()
+                        nDiffT += applied
                     }
                 finally
                     batch.clear()
