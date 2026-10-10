@@ -10,7 +10,9 @@ import scala.util.Using
 
 object IOUtils:
 
-    private val surrogatePattern: Pattern = Pattern.compile("[^\u0000-\uffff]")
+    // java.util.regex matches by code point: a well-formed surrogate pair is one supplementary
+    // code point and never matches this class, so only lone surrogates do.
+    private val surrogatePattern: Pattern = Pattern.compile("[\\uD800-\\uDFFF]")
 
     private val boms: Set[Char] = Set(
       '\uefbb', // UTF-8
@@ -38,21 +40,16 @@ object IOUtils:
         if !boms.contains(possibleBOM(0)) then
             reader.reset()
 
-    /** Java strings are stored as sequences of 16-bit chars, but what they represent is sequences
-      * of unicode characters. In unicode terminology, they are stored as code units, but model code
-      * points. Thus, it's somewhat meaningless to talk about removing surrogates, which don't exist
-      * in the character / code point representation (unless you have rogue single surrogates, in
-      * which case you have other problems). Rather, what you want to do is to remove any characters
-      * which will require surrogates when encoded. That means any character which lies beyond the
-      * basic multilingual plane. You can do that with a simple regular expression.
+    /** Java strings are stored as sequences of 16-bit chars (UTF-16 code units). A character
+      * beyond the basic multilingual plane (an emoji, a mathematical alphanumeric, a CJK extension
+      * ideograph) is a well-formed surrogate pair and is kept: frontends need it verbatim, e.g.
+      * Python accepts such characters in identifiers. Only a lone surrogate, which no encoder can
+      * write, is replaced - by a single '?', so every offset into the content stays valid.
       */
     private def replaceUnpairedSurrogates(input: String): String =
         val matches = surrogatePattern.matcher(input)
-        if matches.find() then
-            val size = matches.end() - matches.start()
-            matches.replaceAll("?" * size)
-        else
-            input
+        if matches.find() then matches.replaceAll("?")
+        else input
 
     private def contentFromBufferedSource(bufferedSource: BufferedSource): Seq[String] =
         val reader = bufferedSource.bufferedReader()
@@ -77,7 +74,7 @@ object IOUtils:
 
     /** Reads a file at the given path and:
       *   - skips BOM if present
-      *   - removes unpaired surrogates
+      *   - replaces lone surrogates with '?' (characters beyond the BMP are kept)
       *   - uses UTF-8 encoding (replacing malformed and unmappable characters)
       *
       * @param path
@@ -92,7 +89,7 @@ object IOUtils:
 
     /** Reads a file at the given path and:
       *   - skips BOM if present
-      *   - removes unpaired surrogates
+      *   - replaces lone surrogates with '?' (characters beyond the BMP are kept)
       *   - uses UTF-8 encoding (replacing malformed and unmappable characters)
       *
       * @param path
