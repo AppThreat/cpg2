@@ -1,7 +1,10 @@
 name: PR build
 
+# test-codepropertygraph is a required status check on main, so this
+# workflow must trigger on merge-group builds too.
 on:
   pull_request:
+  merge_group:
   push:
     branches:
       - main
