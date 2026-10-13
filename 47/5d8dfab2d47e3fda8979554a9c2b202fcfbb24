@@ -1,0 +1,62 @@
+project/OdbCodegenSbtPlugin.scala
+  s_44a14d2470128d::t_eeb7d2ce5b5917 1-79
+codepropertygraph/build.sbt
+  s_44a14d2470128d::t_e3c7a5b41f8fb7 3
+.github/workflows/pr.yml
+  s_44a14d2470128d::t_d9308fecb1ce0f 39-40
+docs/lessons/lesson-3-traversals.md
+  s_44a14d2470128d::t_ffac9d0615af68 12
+project/FileUtils.scala
+  s_44a14d2470128d::t_86ce85f8f89361 4
+docs/lessons/lesson-4-serialization.md
+  s_44a14d2470128d::t_4fb6b751d04896 12
+schema/build.sbt
+  s_44a14d2470128d::t_6814b23793f4d9 11,14-16,21,35,40
+.github/workflows/release.yml
+  s_44a14d2470128d::t_d9308fecb1ce0f 30,33
+project/build.properties
+  s_44a14d2470128d::t_86ce85f8f89361 1
+build.sbt
+  s_44a14d2470128d::t_1ac78d24d67d86 2-3,6,13,15-20,27,39-42,44-45
+  s_44a14d2470128d::t_71bcff66046738 46
+  s_44a14d2470128d::t_3920f42c7e373d 37-38,43
+  s_44a14d2470128d::t_c997bb53ac6cd0 14
+project/GithubPackages.scala
+  s_44a14d2470128d::t_86ce85f8f89361 1-7,10-40
+  s_44a14d2470128d::t_251c5d1707837f 8-9
+schema2json/build.sbt
+  s_44a14d2470128d::t_e3c7a5b41f8fb7 3
+  s_44a14d2470128d::t_d9308fecb1ce0f 17-20
+docs/lessons/lesson-1-schema.md
+  s_44a14d2470128d::t_bef2812f521ca1 12
+domainClasses/build.sbt
+  s_44a14d2470128d::t_dff4035a76b066 8
+proto-bindings/build.sbt
+  s_44a14d2470128d::t_7459e0e971ba78 12-13
+  s_44a14d2470128d::t_a88dd6bff4858a 10-11
+  s_44a14d2470128d::t_dff4035a76b066 14-18,22
+docs/lessons/lesson-5-algorithms.md
+  s_44a14d2470128d::t_4c3807e877f36c 12
+project/Versions.scala
+  s_44a14d2470128d::t_86ce85f8f89361 12
+project/plugins.sbt
+  s_44a14d2470128d::t_86ce85f8f89361 1-7
+docs/lessons/lesson-2-codegen.md
+  s_44a14d2470128d::t_2c4a8533bb5e90 12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "475d8dfab2d47e3fda8979554a9c2b202fcfbb24",
+  "prompts": {},
+  "sessions": {
+    "s_44a14d2470128d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "feb7d11a-3362-4661-8cf7-d6fc317c8261",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Prabhu Subramanian <prabhu@appthreat.com>"
+    }
+  }
+}
