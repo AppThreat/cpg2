@@ -9,7 +9,7 @@ Apply call-graph and control-flow algorithms (PageRank, Topological Sort, Domina
 To follow this lesson, ensure the following software is installed on your system:
 
 - **JDK 23+**: Standard OpenJDK or GraalVM.
-- **SBT 1.10+**: Standard build utility.
+- **sbt 2.0+**: Standard build utility.
 - **Pre-compiled CPG File**: An existing `app.atom` or `cpg.bin` file.
 - **JSON Processing Utilities**: Tools like `jq` to parse algorithm output.
 

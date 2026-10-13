@@ -1,7 +1,7 @@
 import java.io.File
 import java.nio.file.Files
 import java.security.{DigestInputStream, MessageDigest}
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 object FileUtils {
 

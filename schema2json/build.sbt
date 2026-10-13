@@ -1,6 +1,6 @@
 name := "schema2json"
 
-dependsOn(Projects.schema)
+BareBuildSyntax.dependsOn(Projects.schema)
 
 libraryDependencies ++= Seq(
   "org.json4s"            %% "json4s-native" % Versions.json4s,
@@ -14,15 +14,15 @@ Test / fork := true
 testOptions += Tests.Argument(TestFrameworks.JUnit, "-a", "-v")
 
 enablePlugins(JavaAppPackaging)
+// sbt 2 moves `target` to target/out/jvm/scala-<version>/schema2json; the checked-in schema2json.sh
+// links to the staged launcher where sbt 1 put it. sbt 2's clean only removes target/out, so clean
+// the stage too, as sbt 1's removal of all of target did.
+Universal / com.typesafe.sbt.packager.universal.UniversalPlugin.autoImport.stagingDirectory :=
+  baseDirectory.value / "target" / "universal" / "stage"
+cleanFiles += (Universal / com.typesafe.sbt.packager.universal.UniversalPlugin.autoImport.stagingDirectory).value
 
-ThisBuild / resolvers ++= Seq(
-  Resolver.mavenLocal,
-  Resolver.githubPackages("appthreat/overflowdb2"),
-  "Sonatype OSS".at("https://oss.sonatype.org/content/repositories/public")
-)
 githubOwner := "appthreat"
 githubRepository := "cpg2"
-githubSuppressPublicationWarning := true
 credentials +=
   Credentials(
     "GitHub Package Registry",
