@@ -7,24 +7,19 @@ val protocLocalDir   = "protoc"
 val protocBinaryPath = s"$protocLocalDir/bin/protoc"
 ProtobufConfig / protobufProtoc := protocBinaryPath
 ProtobufConfig / version        := "3.25.5"
-ProtobufConfig / sourceDirectories += (ProtobufConfig / protobufExternalIncludePath).value
-ProtobufConfig / protobufGenerate := (ProtobufConfig / protobufGenerate)
-  .dependsOn(copyLatestCpgProto)
-  .dependsOn(installProtoc)
-  .value
-
-lazy val copyLatestCpgProto = taskKey[Unit]("copy latest cpg.proto to externalIncludePath")
-copyLatestCpgProto := {
-  val protoFile  = (Projects.schema / generateProtobuf).value
-  val targetDir  = (ProtobufConfig / protobufExternalIncludePath).value
-  val targetFile = targetDir / (protoFile.getName)
-  targetDir.mkdirs
-  IO.copyFile(protoFile, targetFile, CopyOptions().withOverwrite(true).withPreserveLastModified(true))
-}
+// compile the schema project's latest cpg.proto in place: since 0.8.4, sbt-protobuf prunes
+// protobuf_external down to the schemas unpacked from dependencies, so it cannot be copied there
+ProtobufConfig / protobufSources += Def.uncached((Projects.schema / generateProtobuf).value)
+ProtobufConfig / protobufIncludePaths += Def.uncached((Projects.schema / generateProtobuf).value.getParentFile)
+ProtobufConfig / protobufGenerate := Def.uncached(
+  (ProtobufConfig / protobufGenerate)
+    .dependsOn(installProtoc)
+    .value
+)
 
 lazy val installProtoc =
   taskKey[File]("downloads configured protoc version for your platform, unless already available")
-installProtoc := {
+installProtoc := Def.uncached {
   import sys.process._
   import java.nio.file.Files
   // import better.files.FileExtensions
@@ -78,14 +73,8 @@ Compile / sourceGenerators += Def.task {
   Seq(scalaFile)
 }.taskValue
 
-ThisBuild / resolvers ++= Seq(
-  Resolver.mavenLocal,
-  Resolver.githubPackages("appthreat/overflowdb2"),
-  "Sonatype OSS".at("https://oss.sonatype.org/content/repositories/public")
-)
 githubOwner := "appthreat"
 githubRepository := "cpg2"
-githubSuppressPublicationWarning := true
 credentials +=
   Credentials(
     "GitHub Package Registry",

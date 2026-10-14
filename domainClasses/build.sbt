@@ -5,7 +5,7 @@ libraryDependencies += "io.appthreat" %% "odb2-traversal" % Versions.overflowdb
 lazy val generatedSrcDir = settingKey[File]("root for generated sources - we want to check those in")
 generatedSrcDir := (Compile/sourceDirectory).value / "generated"
 Compile/unmanagedSourceDirectories += generatedSrcDir.value
-Compile/compile := (Compile/compile).dependsOn(Projects.schema/Compile/generateDomainClasses).value
+Compile/compile := Def.uncached((Compile/compile).dependsOn(Projects.schema/Compile/generateDomainClasses).value)
 
 Compile / scalacOptions ++= Seq(
   "-rewrite",
@@ -23,14 +23,8 @@ Compile / scalacOptions --= Seq("-Wconf:cat=deprecation:w,any:e", "-Wunused", "-
 // this is just a temporarily commented out to fix the release build...
 // minified command that fails if the below line isn't commented: `sbt clean doc`
 // cleanFiles += baseDirectory.value / "src/main/generated"
-ThisBuild / resolvers ++= Seq(
-  Resolver.mavenLocal,
-  Resolver.githubPackages("appthreat/overflowdb2"),
-  "Sonatype OSS".at("https://oss.sonatype.org/content/repositories/public")
-)
 githubOwner := "appthreat"
 githubRepository := "cpg2"
-githubSuppressPublicationWarning := true
 credentials +=
   Credentials(
     "GitHub Package Registry",

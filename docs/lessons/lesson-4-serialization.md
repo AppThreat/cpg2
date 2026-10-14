@@ -9,7 +9,7 @@ Serialize and deserialize Code Property Graph states using Google Protocol Buffe
 To follow this lesson, ensure the following software is installed on your system:
 
 - **JDK 23+**: Standard OpenJDK or GraalVM.
-- **SBT 1.10+**: Standard build utility.
+- **sbt 2.0+**: Standard build utility.
 - **Protobuf Compiler (protoc)**: Required if compiling proto definitions manually.
 - **Local clone of CPG2**: Clone of [cpg2](https://github.com/AppThreat/cpg2) to build the `proto-bindings` module.
 

@@ -9,7 +9,7 @@ Master how the CPG2 schema DSL compiles to concrete Type-safe domain nodes, edge
 To follow this lesson, ensure the following software is installed on your system:
 
 - **JDK 23+**: Standard OpenJDK or GraalVM.
-- **SBT 1.10+**: Standard build utility.
+- **sbt 2.0+**: Standard build utility.
 - **Local clone of CPG2**: A clone of [cpg2](https://github.com/AppThreat/cpg2).
 
 ### Conceptual Background

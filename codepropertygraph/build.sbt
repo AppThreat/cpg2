@@ -1,6 +1,6 @@
 name := "cpg2"
 
-dependsOn(Projects.protoBindings, Projects.domainClasses)
+BareBuildSyntax.dependsOn(Projects.protoBindings, Projects.domainClasses)
 
 libraryDependencies ++= Seq(
   "io.appthreat"          %% "odb2-traversal" % Versions.overflowdb,
@@ -10,14 +10,8 @@ libraryDependencies ++= Seq(
   "org.scalatest"         %% "scalatest"            % Versions.scalatest % Test
 )
 
-ThisBuild / resolvers ++= Seq(
-  Resolver.mavenLocal,
-  Resolver.githubPackages("appthreat/overflowdb2"),
-  "Sonatype OSS".at("https://oss.sonatype.org/content/repositories/public")
-)
 githubOwner := "appthreat"
 githubRepository := "cpg2"
-githubSuppressPublicationWarning := true
 credentials +=
   Credentials(
     "GitHub Package Registry",

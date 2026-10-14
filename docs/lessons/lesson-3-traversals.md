@@ -9,7 +9,7 @@ Navigate code structures using CPG shortcuts (such as `cpg.method.parameter` or 
 To follow this lesson, ensure the following software is installed on your system:
 
 - **JDK 23+**: Standard Java SE Development Kit.
-- **SBT 1.10+**: Standard build utility.
+- **sbt 2.0+**: Standard build utility.
 - **Pre-compiled CPG File**: An existing `app.atom` or `cpg.bin` file.
 - **Node.js or Python**: Runtimes to generate test graphs.
 

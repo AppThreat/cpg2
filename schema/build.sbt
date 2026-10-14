@@ -8,16 +8,17 @@ generateDomainClasses/classWithSchema := "io.shiftleft.codepropertygraph.schema.
 generateDomainClasses/fieldName       := "instance"
 generateDomainClasses/outputDir       := (Projects.domainClasses / generatedSrcDir).value
 
-Compile / generateDomainClasses := {
+Compile / generateDomainClasses := Def.uncached {
   val originalResult = (Compile / generateDomainClasses).value
   val r = (Compile / run / runner).value
-  val cp = (Compile / fullClasspath).value.map(_.data)
-  r.run("io.shiftleft.codepropertygraph.schema.Codegen", cp, Seq("domainClasses/src/main/generated", "--only-hash"), streams.value.log).get
+  val converter = fileConverter.value
+  val cp = (Compile / fullClasspath).value.map(entry => converter.toPath(entry.data))
+  r.run("io.shiftleft.codepropertygraph.schema.Codegen", cp, Seq(originalResult.getPath, "--only-hash"), streams.value.log).get
   originalResult
 }
 
 val generateProtobuf = taskKey[File]("generate protobuf definitions: cpg.proto")
-generateProtobuf := Def.taskDyn {
+generateProtobuf := Def.uncached(Def.taskDyn {
   val outputRoot       = target.value / "protos"
   val outputFile       = outputRoot / "cpg.proto"
   val currentSchemaMd5 = FileUtils.md5(sourceDirectory.value, file("schema/build.sbt"))
@@ -31,26 +32,19 @@ generateProtobuf := Def.taskDyn {
     Def.task {
       FileUtils.deleteRecursively(outputRoot)
       val invoked =
-        (Compile / runMain).toTask(s" io.shiftleft.codepropertygraph.schema.Protogen schema/target/protos").value
+        (Compile / runMain).toTask(s" io.shiftleft.codepropertygraph.schema.Protogen $outputRoot").value
       lastSchemaMd5(currentSchemaMd5)
       outputFile
     }
   }
-}.value
+}.value)
 
 lazy val schemaMd5File                 = file("target/schema-src.md5")
 def lastSchemaMd5: Option[String]      = scala.util.Try(IO.read(schemaMd5File)).toOption
 def lastSchemaMd5(value: String): Unit = IO.write(schemaMd5File, value)
 
-ThisBuild / resolvers ++= Seq(
-  Resolver.mavenLocal,
-  Resolver.githubPackages("appthreat/overflowdb2"),
-  "Sonatype OSS".at("https://oss.sonatype.org/content/repositories/public")
-)
-
 githubOwner := "appthreat"
 githubRepository := "cpg2"
-githubSuppressPublicationWarning := true
 credentials +=
   Credentials(
     "GitHub Package Registry",
