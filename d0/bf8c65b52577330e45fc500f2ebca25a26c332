@@ -1,0 +1,26 @@
+codepropertygraph/src/main/scala/io/shiftleft/passes/StreamingCpgPass.scala
+  s_44a14d2470128d::t_f181808c9d9637 30,32-36,79-87,89-93,100,107,111,113-114,128,130,142-145,153-157,180
+  s_44a14d2470128d::t_2a3c7c754e884c 72-73
+  s_44a14d2470128d::t_06827a171c4fe0 158-160
+codepropertygraph/src/test/scala/io/shiftleft/passes/StreamingCpgPassTests.scala
+  s_44a14d2470128d::t_5978309b296b24 118-132,134-140
+  s_44a14d2470128d::t_2f688a2dfd3a87 133
+build.sbt
+  s_44a14d2470128d::t_cb67793bab62e9 2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d0bf8c65b52577330e45fc500f2ebca25a26c332",
+  "prompts": {},
+  "sessions": {
+    "s_44a14d2470128d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "feb7d11a-3362-4661-8cf7-d6fc317c8261",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Prabhu Subramanian <prabhu@appthreat.com>"
+    }
+  }
+}
