@@ -115,6 +115,29 @@ class StreamingCpgPassTests extends AnyWordSpec with Matchers with TimeLimits {
             }
         }
 
+        "apply the parts in their order, however they finish, so node ids repeat run to run" in {
+            failAfter(DeadlockTimeout) {
+                val partCount = 40
+                def run(): List[AnyRef] = {
+                    val cpg = Cpg.emptyCpg
+                    val pass = new StreamingCpgPass[String](cpg, "OrderPass") {
+                        override def generateParts(): Array[String] =
+                            (0 until partCount).map(i => s"file_$i").toArray
+                        override def runOnPart(diffGraph: DiffGraphBuilder, part: String): Unit = {
+                            // the earlier a part, the longer it takes, so later ones finish first
+                            Thread.sleep(2L * (partCount - part.stripPrefix("file_").toInt))
+                            diffGraph.addNode(NewFile().name(part)).addNode(NewFile().name(s"$part.h"))
+                        }
+                    }
+                    pass.createAndApply()
+                    cpg.graph.nodes.asScala.toList.sortBy(_.id()).map(_.property(Properties.NAME))
+                }
+                val expected = (0 until partCount).flatMap(i => Seq(s"file_$i", s"file_$i.h")).toList
+                run() shouldBe expected
+                run() shouldBe expected
+            }
+        }
+
         "fall back to the default writer batch size for invalid system properties" in {
             val prop     = "odb.streamingpass.writerBatchSize"
             val previous = Option(System.getProperty(prop))
