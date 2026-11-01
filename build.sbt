@@ -1,9 +1,9 @@
 ThisBuild / organization := "io.appthreat"
-ThisBuild / version      := "3.1.1"
+ThisBuild / version      := "3.1.2"
 ThisBuild / scalaVersion := "3.10.0"
 
 // parsed by project/Versions.scala
-val overflowdbVersion = "3.1.1"
+val overflowdbVersion = "3.1.2"
 val overflowdbCodegenVersion = "2.103"
 
 ThisBuild / Test / fork           := true
