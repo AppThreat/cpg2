@@ -106,10 +106,6 @@ For passes that need to allocate IDs (e.g., creating new nodes), pass a `KeyPool
 - **IntervalKeyPool:** Allocates a range of IDs (e.g., 1000-2000). Efficient and thread-safe.
 - **SequenceKeyPool:** Allocates specific IDs from a list.
 
-### Garbage Collection during Passes
-
-By default, CPG2 runs passes without triggering stop-the-world garbage collection pauses between chunk processing loops. This maximizes throughput. If you run into severe memory constraints during large batch runs and want to force explicit garbage collection pauses after each chunk, set the JVM system property `odb.forkjoinpass.explicitGc=1`.
-
 ---
 
 ## Usage Example

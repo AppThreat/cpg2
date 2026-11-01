@@ -128,15 +128,12 @@ abstract class NewStyleCpgPassBase[T <: AnyRef](
             val nParts = parts.length
 
             if nParts > 0 && parts.length > maxChunkSize then
-                val explicitGc = PassConfig.intProp("odb.forkjoinpass.explicitGc", 0) == 1
                 parts.grouped(maxChunkSize).foreach { chunk =>
                     val chunkBuilder = new DiffGraphBuilder
                     chunk.foreach { part =>
                         runOnPart(chunkBuilder, part.asInstanceOf[T])
                     }
                     externalBuilder.absorb(chunkBuilder)
-                    if explicitGc then
-                        System.gc()
                 }
             else
                 nParts match
