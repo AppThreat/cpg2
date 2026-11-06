@@ -28,7 +28,7 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '25'
-    - uses: sbt/setup-sbt@3afe9cf056c5d139bfc46579af1192d77a2f0821  # v1
+    - uses: sbt/setup-sbt@67d461eba2c4753196c230e02da850757ba4775e  # v1.5.14
     - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae  # v5.0.5
       with:
         path: |
